@@ -218,13 +218,27 @@ class ApplicationController < ActionController::Base
     unsaved = []
     if attachments && attachments.is_a?(Hash)
       attachments.each_value do |attachment|
-        file = attachment['file']
-        next unless file && file.size > 0
-        a = Attachment.create(:container => obj, 
-                              :file => file,
-                              :description => attachment['description'].to_s.strip,
-                              :author => User.current)
-        a.new_record? ? (unsaved << a) : (attached << a)
+        # Attachment was already saved, but not associated with the
+        # journal (e.g. StaleObjectError)
+        if attachment['id'] && Attachment.find_by_id(attachment['id'])
+          saved_attachment = Attachment.find_by_id(attachment['id'])
+          if saved_attachment.container == obj
+            attached << saved_attachment
+          else
+            unsaved << saved_attachment
+          end
+        # New attachment
+        elsif file = attachment['file'] && attachment['file'].size > 0
+          file = attachment['file']
+          a = Attachment.create(:container => obj, 
+                                :file => file,
+                                :description => attachment['description'].to_s.strip,
+                                :author => User.current)
+          a.new_record? ? (unsaved << a) : (attached << a)
+        else
+          next
+        end
+
       end
       if unsaved.any?
         flash[:warning] = l(:warning_attachments_not_saved, unsaved.size)

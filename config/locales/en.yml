@@ -147,6 +147,7 @@ en:
   notice_account_pending: "Your account was created and is now pending administrator approval."
   notice_default_data_loaded: Default configuration successfully loaded.
   notice_unable_delete_version: Unable to delete version.
+  notice_file_saved_temporary: "File '{{filename}}' was saved.  To permanently save it with a note, please submit this form."
   
   error_can_t_load_default_data: "Default configuration could not be loaded: {{value}}"
   error_scm_not_found: "The entry or revision was not found in the repository."
@@ -823,6 +824,7 @@ en:
   text_wiki_page_nullify_children: "Keep child pages as root pages"
   text_wiki_page_destroy_children: "Delete child pages and all their descendants"
   text_wiki_page_reassign_children: "Reassign child pages to this parent page"
+  text_changed_to: "{{label}} changed to {{new}}"
   
   default_role_manager: Manager
   default_role_developper: Developer

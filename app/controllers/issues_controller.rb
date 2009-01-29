@@ -206,9 +206,21 @@ class IssuesController < ApplicationController
     end
   rescue ActiveRecord::StaleObjectError
     # Optimistic locking exception
-    flash.now[:error] = l(:notice_locking_conflict)
-    # Remove the previously added attachments if issue was not updated
-    attachments.each(&:destroy)
+    @issue.reload # Get new lock_version
+    @stale_object = StaleObject.new(@issue)
+    @attachments_not_on_journal = attachments
+
+    # Pull in updated attribute changes
+    # User can change issue attributes only if he has :edit permission or if a workflow transition is allowed
+    if (@edit_allowed || !@allowed_statuses.empty?) && params[:issue]
+      attrs = params[:issue].dup
+      attrs.delete_if {|k,v| !UPDATABLE_ATTRS_ON_TRANSITION.include?(k) } unless @edit_allowed
+      attrs.delete(:status_id) unless @allowed_statuses.detect {|s| s.id.to_s == attrs[:status_id].to_s}
+      attrs.delete(:lock_version)
+      @issue.attributes = attrs
+    end
+
+    flash.now[:error] = l(:notice_locking_conflict) + @stale_object.difference_messages(@issue)
   end
 
   def reply
