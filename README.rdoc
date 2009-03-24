@@ -1,0 +1,3 @@
+== Redmine Branches
+
+This is my repository to store separate working branches for Redmine.  All work is done in branches.  Since this is the same repository as my redmine one so just add this one as a remote and fork away.
