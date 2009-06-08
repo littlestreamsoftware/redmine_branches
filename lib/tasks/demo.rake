@@ -75,9 +75,12 @@ namespace :redmine do
         project.trackers = Tracker.find(:all)
         if project.save
           # Roles
-          roles = Role.find(:all)
+          roles =  Role.find(:all).reject {|role|
+            role.builtin == Role::BUILTIN_NON_MEMBER || role.builtin == Role::BUILTIN_ANONYMOUS
+          }
+
           User.find(:all).each do |user|
-            Member.create({:user => user, :project => project, :role => roles.rand})
+            Member.create({:user => user, :project => project, :roles => [roles.rand]})
           end
 
           # Modules
