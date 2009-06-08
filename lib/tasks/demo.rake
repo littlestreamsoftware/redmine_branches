@@ -63,9 +63,9 @@ namespace :redmine do
 
     end
     
-    desc "Add up to 25 random projects"
+    desc "Add up to 5 random projects"
     task :projects => :environment do
-      (1..25).each do
+      (1..5).each do
         project = Project.create(
                                  :name => Faker::Company.catch_phrase[0..29],
                                  :description => Faker::Company.bs,
