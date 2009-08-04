@@ -20,12 +20,12 @@ class GanttsController < ApplicationController
       # Issues that have start and due dates
       events += @query.issues(:include => [:tracker, :assigned_to, :priority],
                               :order => "start_date, due_date",
-                              :conditions => ["(((start_date>=? and start_date<=?) or (due_date>=? and due_date<=?) or (start_date<? and due_date>?)) and start_date is not null and due_date is not null)", @gantt.date_from, @gantt.date_to, @gantt.date_from, @gantt.date_to, @gantt.date_from, @gantt.date_to]
+                              :conditions => ["(((start_date>=:from and start_date<=:to) or (due_date>=:from and due_date<=:to) or (start_date<:from and due_date>:to)) and start_date is not null and due_date is not null)", {:from => @gantt.date_from, :to => @gantt.date_to}]
                               )
       # Issues that don't have a due date but that are assigned to a version with a date
       events += @query.issues(:include => [:tracker, :assigned_to, :priority, :fixed_version],
                               :order => "start_date, effective_date",
-                              :conditions => ["(((start_date>=? and start_date<=?) or (effective_date>=? and effective_date<=?) or (start_date<? and effective_date>?)) and start_date is not null and due_date is null and effective_date is not null)", @gantt.date_from, @gantt.date_to, @gantt.date_from, @gantt.date_to, @gantt.date_from, @gantt.date_to]
+                              :conditions => ["(((start_date>=:from and start_date<=:to) or (effective_date>=:from and effective_date<=:to) or (start_date<:from and effective_date>:to)) and start_date is not null and due_date is null and effective_date is not null)", {:from => @gantt.date_from, :to => @gantt.date_to}]
                               )
       # Versions
       events += @query.versions(:conditions => ["effective_date BETWEEN ? AND ?", @gantt.date_from, @gantt.date_to])
