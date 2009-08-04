@@ -18,15 +18,11 @@ class GanttsController < ApplicationController
     if @query.valid?
       events = []
       # Issues that have start and due dates
-      events += @query.issues(:include => [:tracker, :assigned_to, :priority],
-                              :order => "start_date, due_date",
-                              :conditions => ["(((start_date>=:from and start_date<=:to) or (due_date>=:from and due_date<=:to) or (start_date<:from and due_date>:to)) and start_date is not null and due_date is not null)", {:from => @gantt.date_from, :to => @gantt.date_to}]
-                              )
+      events += Issue.for_gantt_with_start_and_end_dates(@query, @gantt.date_from, @gantt.date_to)
+
       # Issues that don't have a due date but that are assigned to a version with a date
-      events += @query.issues(:include => [:tracker, :assigned_to, :priority, :fixed_version],
-                              :order => "start_date, effective_date",
-                              :conditions => ["(((start_date>=:from and start_date<=:to) or (effective_date>=:from and effective_date<=:to) or (start_date<:from and effective_date>:to)) and start_date is not null and due_date is null and effective_date is not null)", {:from => @gantt.date_from, :to => @gantt.date_to}]
-                              )
+      events += Issue.for_gantt_with_start_and_assigned_to_version_with_date(@query, @gantt.date_from, @gantt.date_to)
+
       # Versions
       events += @query.versions(:conditions => ["effective_date BETWEEN ? AND ?", @gantt.date_from, @gantt.date_to])
                                    
