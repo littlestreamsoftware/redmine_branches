@@ -32,6 +32,21 @@ class ApplicationHelperTest < HelperTestCase
   def setup
     super
   end
+
+  def test_format_version_name_is_authorized
+    User.current = User.find(1)
+    assert_equal "eCookbook - 0.1", format_version_name(Version.find(1))
+  end
+  
+  def test_format_version_name_is_unauthorized
+    User.current = User.find(3)
+    assert_equal "You are not authorized to view this.", format_version_name(Version.find(5))
+  end
+
+  def test_format_version_name_for_system_version
+    User.current = User.find(3)
+    assert_equal "OnlineStore - Systemwide visible version", format_version_name(Version.find(7))
+  end
   
   def test_auto_links
     to_test = {
@@ -135,7 +150,7 @@ RAW
   
   def test_redmine_links
     issue_link = link_to('#3', {:controller => 'issues', :action => 'show', :id => 3}, 
-                               :class => 'issue status-1 priority-1 overdue', :title => 'Error 281 when updating a recipe (New)')
+                               :class => 'issue status-1 priority-1 overdue assigned-to-me', :title => 'Error 281 when updating a recipe (New)')
     
     changeset_link = link_to('r1', {:controller => 'repositories', :action => 'revision', :id => 'ecookbook', :rev => 1},
                                    :class => 'changeset', :title => 'My very first commit')

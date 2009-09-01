@@ -864,3 +864,9 @@ fr:
   field_active: Actif
   enumeration_system_activity: Activité système
   setting_gravatar_default: Default Gravatar image
+  label_version_shared_none: None
+  text_not_authorized: You are not authorized to view this.
+  field_shared: Shared
+  label_version_shared_systemwide: Systemwide
+  label_show_shared_versions: Show shared versions
+  label_version_shared_hierarchy: Parent and child projects

@@ -848,3 +848,9 @@ it:
   button_move_and_follow: Move and follow
   setting_default_projects_modules: Default enabled modules for new projects
   setting_gravatar_default: Default Gravatar image
+  label_version_shared_none: None
+  text_not_authorized: You are not authorized to view this.
+  field_shared: Shared
+  label_version_shared_systemwide: Systemwide
+  label_show_shared_versions: Show shared versions
+  label_version_shared_hierarchy: Parent and child projects

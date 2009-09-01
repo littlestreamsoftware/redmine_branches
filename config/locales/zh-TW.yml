@@ -932,3 +932,9 @@
   enumeration_doc_categories: 文件分類
   enumeration_activities: 活動 (時間追蹤)
   enumeration_system_activity: 系統活動
+  label_version_shared_none: None
+  text_not_authorized: You are not authorized to view this.
+  field_shared: Shared
+  label_version_shared_systemwide: Systemwide
+  label_show_shared_versions: Show shared versions
+  label_version_shared_hierarchy: Parent and child projects

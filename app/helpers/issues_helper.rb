@@ -64,6 +64,36 @@ module IssuesHelper
     @sidebar_queries
   end
 
+  # Returns a set of options for a select field, grouped by project.
+  def shared_version_options(project, selected=nil)
+    grouped = {}
+    project.shared_versions.each do |version|
+      next unless version.open?
+      
+      if User.current.allowed_to?(:view_issues, version.project) || version.systemwide?
+        grouped[version.project.name] ||= []
+        grouped[version.project.name] << [h(version.name), version.id]
+      else
+        grouped[l(:text_not_authorized)] ||=[]
+        grouped[l(:text_not_authorized)] << [l(:text_not_authorized), version.id]
+      end
+    end
+
+    # Add in the selected
+    selected_version = Version.find_by_id(selected)
+    if selected_version && !project.shared_versions.include?(selected_version)
+      if User.current.allowed_to?(:view_issues, selected_version.project) || selected_version.systemwide?
+        grouped[selected_version.project.name] ||= []
+        grouped[selected_version.project.name] << [h(selected_version.name), selected_version.id]
+      else
+        grouped[l(:text_not_authorized)] ||=[]
+        grouped[l(:text_not_authorized)] << [l(:text_not_authorized), selected_version.id]
+      end
+    end
+    
+    grouped_options_for_select(grouped, selected)
+  end
+
   def show_detail(detail, no_html=false)
     case detail.property
     when 'attr'
@@ -91,8 +121,8 @@ module IssuesHelper
         c = IssueCategory.find_by_id(detail.value) and value = c.name if detail.value
         c = IssueCategory.find_by_id(detail.old_value) and old_value = c.name if detail.old_value
       when 'fixed_version_id'
-        v = Version.find_by_id(detail.value) and value = v.name if detail.value
-        v = Version.find_by_id(detail.old_value) and old_value = v.name if detail.old_value
+        v = Version.find_by_id(detail.value) and value = format_version_name(v) if detail.value
+        v = Version.find_by_id(detail.old_value) and old_value = format_version_name(v) if detail.old_value
       when 'estimated_hours'
         value = "%0.02f" % detail.value.to_f unless detail.value.blank?
         old_value = "%0.02f" % detail.old_value.to_f unless detail.old_value.blank?

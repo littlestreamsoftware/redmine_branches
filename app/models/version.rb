@@ -16,7 +16,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Version < ActiveRecord::Base
+  SharedValues = {
+    "none" => :label_version_shared_none,
+    "hierarchy" => :label_version_shared_hierarchy,
+    "system" => :label_version_shared_systemwide
+  }
+
   before_destroy :check_integrity
+  after_save :update_issue_versions
   belongs_to :project
   has_many :fixed_issues, :class_name => 'Issue', :foreign_key => 'fixed_version_id'
   acts_as_customizable
@@ -30,9 +37,21 @@ class Version < ActiveRecord::Base
   validates_length_of :name, :maximum => 60
   validates_format_of :effective_date, :with => /^\d{4}-\d{2}-\d{2}$/, :message => :not_a_date, :allow_nil => true
   validates_inclusion_of :status, :in => VERSION_STATUSES
+  validates_inclusion_of :shared, :in => SharedValues.keys
 
   named_scope :open, :conditions => {:status => 'open'}
-    
+  named_scope :systemwide_versions, :conditions => ["#{Version.table_name}.shared = ?", 'system' ]
+  named_scope :hierarchy_versions, lambda {|project_ids|
+    {
+      :conditions => ["#{Version.table_name}.shared = ? AND #{Version.table_name}.project_id IN (?)",
+                      'hierarchy', project_ids]
+    }
+  }
+
+  def systemwide?
+    shared == 'system'
+  end
+  
   def start_date
     effective_date
   end
@@ -53,6 +72,10 @@ class Version < ActiveRecord::Base
   
   def closed?
     status == 'closed'
+  end
+
+  def open?
+    status == 'open'
   end
   
   # Returns true if the version is completed: due date reached and no open issues
@@ -123,6 +146,11 @@ class Version < ActiveRecord::Base
 private
   def check_integrity
     raise "Can't delete version" if self.fixed_issues.find(:first)
+  end
+
+  # Update the issue's fixed versions.  Used if a version's sharing changes.
+  def update_issue_versions
+    Issue.update_fixed_versions_from_project_hierarchy_change
   end
   
   # Returns the average estimated time of assigned issues
