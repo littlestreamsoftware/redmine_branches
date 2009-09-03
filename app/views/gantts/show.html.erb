@@ -55,10 +55,10 @@ if @gantt.zoom >1
 end
 
 g_width = (@gantt.date_to - @gantt.date_from + 1)*zoom
-g_height = [(20 * @gantt.events.length + 6)+150, 206].max
+# Collect the number of issues on Versions
+g_height = [(20 * (@gantt.events.length + number_of_issues_on_versions(@gantt)) + 6)+150, 206].max
 t_height = g_height + headers_height
 %>
-
 <table width="100%" style="border:0; border-collapse: collapse;">
 <tr>
 <td style="width:<%= subject_width %>px; padding:0px;">

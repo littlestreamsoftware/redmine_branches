@@ -16,6 +16,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module GanttHelper
+  def number_of_issues_on_versions(gantt)
+    versions = gantt.events.collect {|event| (event.is_a? Version) ? event : nil}.compact
+
+    versions.sum {|v| v.fixed_issues.for_gantt.with_query(@query).count}
+  end
+  
   def tasks_subjects(options={})
     events = options.delete(:events)
     top = options.delete(:top)
