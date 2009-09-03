@@ -48,4 +48,57 @@ module GanttHelper
     end
     output
   end
+
+  def tasks(options)
+    top = options.delete(:top)
+    zoom = options.delete(:zoom)
+    
+    output = ''
+    @gantt.events.each do |i| 
+      if i.is_a? Issue 
+        i_start_date = (i.start_date >= @gantt.date_from ? i.start_date : @gantt.date_from )
+        i_end_date = (i.due_before <= @gantt.date_to ? i.due_before : @gantt.date_to )
+	
+        i_done_date = i.start_date + ((i.due_before - i.start_date+1)*i.done_ratio/100).floor
+        i_done_date = (i_done_date <= @gantt.date_from ? @gantt.date_from : i_done_date )
+        i_done_date = (i_done_date >= @gantt.date_to ? @gantt.date_to : i_done_date )
+	
+        i_late_date = [i_end_date, Date.today].min if i_start_date < Date.today
+	
+        i_left = ((i_start_date - @gantt.date_from)*zoom).floor 	
+        i_width = ((i_end_date - i_start_date + 1)*zoom).floor - 2                  # total width of the issue (- 2 for left and right borders)
+        d_width = ((i_done_date - i_start_date)*zoom).floor - 2                     # done width
+        l_width = i_late_date ? ((i_late_date - i_start_date+1)*zoom).floor - 2 : 0 # delay width
+        css = "task " + (i.leaf? ? 'leaf' : 'parent')
+	
+        output << "<div style='top:#{ top }px;left:#{ i_left }px;width:#{ i_width }px;' class='#{css} task task_todo'>&nbsp;</div>"
+        if l_width > 0
+          output << "<div style='top:#{ top }px;left:#{ i_left }px;width:#{ l_width }px;' class='#{css} task task_late'>&nbsp;</div>"
+        end
+        if d_width > 0
+          output<< "<div style='top:#{ top }px;left:#{ i_left }px;width:#{ d_width }px;' class='#{css} task task_done'>&nbsp;</div>"
+        end
+        output << "<div style='top:#{ top }px;left:#{ i_left + i_width + 5 }px;background:#fff;' class='#{css} task'>"
+        output << i.status.name
+        output << (i.done_ratio).to_i
+        output << "%"
+        output << "</div>"
+
+        output << "<div class='tooltip' style='position: absolute;top:#{ top }px;left:#{ i_left }px;width:#{ i_width }px;height:12px;'>"
+        output << '<span class="tip">'
+        output << render_issue_tooltip(i)
+        output << "</span></div>"
+      else 
+        i_left = ((i.start_date - @gantt.date_from)*zoom).floor
+
+        output << "<div style='top:#{ top }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
+        output << "<div style='top:#{ top }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
+		output << h("#{i.project} -") unless @project && @project == i.project
+		output << "<strong>#{h i }</strong>"
+        output << "</div>"
+      end
+      top = top + 20
+    end
+    output
+  end
 end
