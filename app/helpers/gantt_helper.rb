@@ -52,9 +52,10 @@ module GanttHelper
   def tasks(options)
     top = options.delete(:top)
     zoom = options.delete(:zoom)
+    events = options.delete(:events)
     
     output = ''
-    @gantt.events.each do |i| 
+    events.each do |i| 
       if i.is_a? Issue 
         i_start_date = (i.start_date >= @gantt.date_from ? i.start_date : @gantt.date_from )
         i_end_date = (i.due_before <= @gantt.date_to ? i.due_before : @gantt.date_to )
@@ -80,7 +81,8 @@ module GanttHelper
         end
         output << "<div style='top:#{ top }px;left:#{ i_left + i_width + 5 }px;background:#fff;' class='#{css} task'>"
         output << i.status.name
-        output << (i.done_ratio).to_i
+        output << ' '
+        output << (i.done_ratio).to_i.to_s
         output << "%"
         output << "</div>"
 
@@ -88,7 +90,7 @@ module GanttHelper
         output << '<span class="tip">'
         output << render_issue_tooltip(i)
         output << "</span></div>"
-      else 
+      elsif i.is_a? Version
         i_left = ((i.start_date - @gantt.date_from)*zoom).floor
 
         output << "<div style='top:#{ top }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
@@ -96,8 +98,18 @@ module GanttHelper
 		output << h("#{i.project} -") unless @project && @project == i.project
 		output << "<strong>#{h i }</strong>"
         output << "</div>"
+
+      else
+        # Nothing
       end
       top = top + 20
+      if i.is_a? Version
+        issues = i.fixed_issues.for_gantt.with_query(@query)
+        if issues
+          output << tasks(:top => top, :zoom => zoom, :events => issues)
+          top = top + (20 * issues.length) # Pad the top for each issue displayed
+        end
+      end
     end
     output
   end

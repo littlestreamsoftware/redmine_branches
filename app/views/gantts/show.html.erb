@@ -154,7 +154,7 @@ end %>
 # Tasks
 #
 top = headers_height + 10 %>
-<%= tasks(:top => top, :zoom => zoom ) %>
+<%= tasks(:top => top, :zoom => zoom, :events => @gantt.events ) %>
 
 <%
 #
