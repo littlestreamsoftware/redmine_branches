@@ -71,7 +71,7 @@ t_height = g_height + headers_height
 # Tasks subjects
 #
 top = headers_height + 8 %>
-<%= tasks_subjects(:events => @gantt.events, :headers_height => headers_height) %>
+<%= tasks_subjects(:events => @gantt.events, :headers_height => headers_height, :top => top) %>
 </div>
 </td>
 <td>

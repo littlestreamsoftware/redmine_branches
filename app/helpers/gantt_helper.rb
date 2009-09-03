@@ -17,25 +17,34 @@
 
 module GanttHelper
   def tasks_subjects(options={})
-    headers_height = options.delete(:headers_height)
     events = options.delete(:events)
+    top = options.delete(:top)
+    indent = options.delete(:indent) || 4
     
     output = ''
-    top = headers_height + 8
     events.each do |i|
-      left = 4 + (i.is_a?(Issue) ? i.level * 16 : 0)
-
-      output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{top}px;left:#{left}px;overflow:hidden;'><small>    "
+      output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{top}px;left:#{indent}px;overflow:hidden;'><small>    "
       if i.is_a? Issue
-        output << h("#{i.project} -") unless @project && @project == i.project
-        output << link_to_issue(i)
-      else
+      	output << h("#{i.project} -") unless @project && @project == i.project
+      	output << link_to_issue(i)
+        output << ":"
+        output << h(i.subject)
+      elsif i.is_a? Version
         output << '<span class="icon icon-package">'
+        output << h("#{i.project} -") unless @project && @project == i.project
         output << link_to_version(i)
-        output << "</span>"
+      else
+        # Nothing
       end
       output << "</small></div>"
       top = top + 20
+      if i.is_a? Version
+        issues = i.fixed_issues.for_gantt.with_query(@query)
+        if issues
+          output << tasks_subjects(:top => top, :events => issues, :indent => indent + 30)
+          top = top + (20 * issues.length) # Pad the top for each issue displayed
+        end
+      end
     end
     output
   end
