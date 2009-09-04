@@ -20,7 +20,8 @@ module Redmine
     # Simple class to handle gantt chart data
     class Gantt
       attr_reader :year_from, :month_from, :date_from, :date_to, :zoom, :months, :events
-    
+      attr_accessor :query
+      
       def initialize(options={})
         options = options.dup
         @events = []
@@ -101,7 +102,7 @@ module Redmine
         # width of one day in pixels
         zoom = @zoom*2
         g_width = (@date_to - @date_from + 1)*zoom
-        g_height = 20 * events.length + 20
+        g_height = 20 * (events.length + number_of_issues_on_versions) + 20
         headers_heigth = (show_weeks ? 2*header_heigth : header_heigth)
         height = g_height + headers_heigth
             
@@ -110,14 +111,7 @@ module Redmine
         gc = Magick::Draw.new
         
         # Subjects
-        top = headers_heigth + 20
-        gc.fill('black')
-        gc.stroke('transparent')
-        gc.stroke_width(1)
-        events.each do |i|
-          gc.text(4, top + 2, (i.is_a?(Issue) ? i.subject : i.name))
-          top = top + 20
-        end
+        image_subjects(gc, :top => (headers_heigth + 20), :events => events, :indent => 0)
     
         # Months headers
         month_f = @date_from
@@ -195,6 +189,49 @@ module Redmine
             
         # content
         top = headers_heigth + 20
+        image_tasks(gc, :top => top, :zoom => zoom, :events => events, :subject_width => subject_width)
+        
+        # today red line
+        if Date.today >= @date_from and Date.today <= date_to
+          gc.stroke('red')
+          x = (Date.today-@date_from+1)*zoom + subject_width
+          gc.line(x, headers_heigth, x, headers_heigth + g_height-1)      
+        end    
+        
+        gc.draw(imgl)
+        imgl.format = format
+        imgl.to_blob
+      end if Object.const_defined?(:Magick)
+
+      private
+
+      # Helper methods to draw the image.
+      # TODO: similar to the GanttHelper
+      def image_subjects(gc, options = {})
+        events = options.delete(:events)
+        top = options.delete(:top)
+        indent = options.delete(:indent) || 4
+
+        gc.fill('black')
+        gc.stroke('transparent')
+        gc.stroke_width(1)
+        events.each do |i|
+          gc.text(indent, top + 2, (i.is_a?(Issue) ? i.subject : i.name))
+          top = top + 20
+          if i.is_a? Version
+            issues = i.fixed_issues.for_gantt.with_query(query)
+            image_subjects(gc, :top => top, :events => issues, :indent => indent + 30)
+            top = top + (20 * issues.length) # Pad the top for each issue displayed
+          end
+        end
+      end
+
+      def image_tasks(gc, options = {})
+        top = options.delete(:top)
+        zoom = options.delete(:zoom)
+        events = options.delete(:events)
+        subject_width = options.delete(:subject_width)
+
         gc.stroke('transparent')
         events.each do |i|      
           if i.is_a?(Issue)       
@@ -218,14 +255,23 @@ module Redmine
             gc.rectangle(i_left, top, i_left + d_width, top - 6) if d_width > 0
             gc.fill('black')
             gc.text(i_left + i_width + 5,top + 1, "#{i.status.name} #{i.done_ratio}%")
-          else
+          elsif i.is_a? Version
             i_left = subject_width + ((i.start_date - @date_from)*zoom).floor
             gc.fill('green')
             gc.rectangle(i_left, top, i_left + 6, top - 6)        
             gc.fill('black')
             gc.text(i_left + 11, top + 1, i.name)
+          else
+            # Nothing
           end
           top = top + 20
+          if i.is_a? Version
+            issues = i.fixed_issues.for_gantt.with_query(query)
+            if issues
+              image_tasks(gc, :top => top, :zoom => zoom, :events => issues, :subject_width => subject_width)
+              top = top + (20 * issues.length) # Pad the top for each issue displayed
+            end
+          end
         end
         
         # today red line
@@ -269,6 +315,14 @@ module Redmine
           x.start_date <=> y.start_date
         end
       end
+
+      # TODO: same as the GanttHelper
+      def number_of_issues_on_versions
+        versions = events.collect {|event| (event.is_a? Version) ? event : nil}.compact
+
+        versions.sum {|v| v.fixed_issues.for_gantt.with_query(query).count}
+      end
+
     end
   end
 end
