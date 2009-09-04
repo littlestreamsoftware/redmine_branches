@@ -410,13 +410,37 @@ module Redmine
         
         # Tasks
         top = headers_heigth + y_start
+        tasks(pdf, gantt, {
+                :top => top,
+                :zoom => zoom,
+                :events => gantt.events,
+                :subject_width => subject_width,
+                :g_width => g_width
+              })
+
+        
+        pdf.Line(15, top, subject_width+g_width, top)
+        pdf.Output
+      end
+
+      private
+      # TODO: refactor logic with GanttHelper
+      def tasks(pdf, gantt, options={})
+        top = options.delete(:top)
+        zoom = options.delete(:zoom)
+        events = options.delete(:events)
+        subject_width = options.delete(:subject_width)
+        g_width = options.delete(:g_width)
+        indent = options.delete(:indent) || 0
+
         pdf.SetFontStyle('B',7)
-        gantt.events.each do |i|
+        events.each do |i|
           pdf.SetY(top)
           pdf.SetX(15)
           
           if i.is_a? Issue
-            pdf.Cell(subject_width-15, 5, "#{i.tracker} #{i.id}: #{i.subject}".sub(/^(.{30}[^\s]*\s).*$/, '\1 (...)'), "LR")
+            char_limit = 30 - indent
+            pdf.Cell(subject_width-15, 5, (" " * indent) +"#{i.tracker} #{i.id}: #{i.subject}".sub(/^(.{#{char_limit}}[^\s]*\s).*$/, '\1 (...)'), "LR")
           else
             pdf.Cell(subject_width-15, 5, "#{l(:label_version)}: #{i.name}", "LR")
           end
@@ -484,10 +508,15 @@ module Redmine
             pdf.Line(15, top, subject_width+g_width, top)
           end
           pdf.SetDrawColor(0, 0, 0)
+
+          if i.is_a? Version
+            issues = i.fixed_issues.for_gantt.with_query(@query)
+            if issues
+              tasks(pdf, gantt, :top => top, :zoom => zoom, :events => issues, :subject_width => subject_width, :g_width => g_width, :indent => indent + 5)
+              top = top + (5 * issues.length) # Pad the top for each issue displayed
+            end
+          end
         end
-        
-        pdf.Line(15, top, subject_width+g_width, top)
-        pdf.Output
       end
     end
   end
