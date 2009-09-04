@@ -3,6 +3,7 @@ class GanttsController < ApplicationController
 
   rescue_from Query::StatementInvalid, :with => :query_statement_invalid
 
+  helper :gantt
   helper :issues
   helper :projects
   helper :queries
@@ -17,15 +18,20 @@ class GanttsController < ApplicationController
     @query.group_by = nil
     if @query.valid?
       events = []
-      # Issues that have start and due dates
-      events += Issue.for_gantt_with_start_and_end_dates(@query, @gantt.date_from, @gantt.date_to)
-
-      # Issues that don't have a due date but that are assigned to a version with a date
-      events += Issue.for_gantt_with_start_and_assigned_to_version_with_date(@query, @gantt.date_from, @gantt.date_to)
-
       # Versions
-      events += @query.versions(:conditions => ["effective_date BETWEEN ? AND ?", @gantt.date_from, @gantt.date_to])
-                                   
+      versions = @query.versions(:conditions => ["effective_date BETWEEN ? AND ?", @gantt.date_from, @gantt.date_to])
+      events += versions
+
+      # Issues that have start dates and end dates but don't have a version
+      # from above
+      #
+      # OPTIMIZE: should filter out issues on the versions above in SQL instead of Ruby
+      issues = Issue.for_gantt_with_start_and_end_dates(@query, @gantt.date_from, @gantt.date_to)
+ 
+      # Issues that don't have a due date but that are assigned to a version with a date
+      issues += Issue.for_gantt_with_start_and_assigned_to_version_with_date(@query, @gantt.date_from, @gantt.date_to)
+
+      events += issues.reject {|i| versions.include?(i.fixed_version)}
       @gantt.events = events
     end
     
