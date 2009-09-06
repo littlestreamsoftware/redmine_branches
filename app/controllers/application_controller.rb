@@ -20,11 +20,12 @@ require 'cgi'
 
 class ApplicationController < ActionController::Base
   include Redmine::I18n
-  
-  # In case the cookie store secret changes
-  rescue_from CGI::Session::CookieStore::TamperedWithCookie do |exception|
-    render :text => 'Your session was invalid and has been reset. Please, reload this page.', :status => 500
-  end
+
+  # TODO: Rails 2.3
+  ## In case the cookie store secret changes
+  #  rescue_from ActionController::Session::CookieStore::TamperedWithCookie do |exception|
+  #    render :text => 'Your session was invalid and has been reset. Please, reload this page.', :status => 500
+  #  end
   
   layout 'base'
   
