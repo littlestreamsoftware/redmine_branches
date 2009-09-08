@@ -103,9 +103,19 @@ class MailerTest < ActiveSupport::TestCase
     journal = Journal.find(2)
     Mailer.deliver_issue_edit(journal)
     mail = ActionMailer::Base.deliveries.last
-    assert !mail.body.include?('<a href="https://mydomain.foo/issues/1">Bug #1: Can\'t print recipes</a>')
+    assert_equal 1, mail.parts.size
+    assert !mail.encoded.include?('href')
   end
-  
+
+  def test_html_mail
+    Setting.plain_text_mail = 0
+    journal = Journal.find(2)
+    Mailer.deliver_issue_edit(journal)
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal 2, mail.parts.size
+    assert mail.encoded.include?('href')
+  end
+
   def test_issue_add_message_id
     ActionMailer::Base.deliveries.clear
     issue = Issue.find(1)
