@@ -46,7 +46,11 @@ module ApplicationHelper
 
   # Display a link to user's account page
   def link_to_user(user, options={})
-    (user && !user.anonymous?) ? link_to(user.name(options[:format]), :controller => 'account', :action => 'show', :id => user) : 'Anonymous'
+    if user.is_a?(User)
+      !user.anonymous? ? link_to(user.name(options[:format]), :controller => 'account', :action => 'show', :id => user) : 'Anonymous'
+    else
+      user.to_s
+    end
   end
 
   def link_to_issue(issue, options={})
@@ -128,6 +132,15 @@ module ApplicationHelper
     s
   end
   
+  # Renders tabs and their content
+  def render_tabs(tabs)
+    if tabs.any?
+      render :partial => 'common/tabs', :locals => {:tabs => tabs}
+    else
+      content_tag 'p', l(:label_no_data), :class => "nodata"
+    end
+  end
+  
   # Renders the project quick-jump box
   def render_project_jump_box
     # Retrieve them now to avoid a COUNT query
@@ -190,6 +203,14 @@ module ApplicationHelper
     end
     s
   end
+  
+  def principals_check_box_tags(name, principals)
+    s = ''
+    principals.each do |principal|
+      s << "<label>#{ check_box_tag name, principal.id, false } #{h principal}</label>\n"
+    end
+    s 
+  end
 
   # Truncates and returns the string as a single line
   def truncate_single_line(string, *args)
@@ -201,12 +222,17 @@ module ApplicationHelper
   end
 
   def authoring(created, author, options={})
-    time_tag = @project.nil? ? content_tag('acronym', distance_of_time_in_words(Time.now, created), :title => format_time(created)) :
-                               link_to(distance_of_time_in_words(Time.now, created), 
-                                       {:controller => 'projects', :action => 'activity', :id => @project, :from => created.to_date},
-                                       :title => format_time(created))
     author_tag = (author.is_a?(User) && !author.anonymous?) ? link_to(h(author), :controller => 'account', :action => 'show', :id => author) : h(author || 'Anonymous')
-    l(options[:label] || :label_added_time_by, :author => author_tag, :age => time_tag)
+    l(options[:label] || :label_added_time_by, :author => author_tag, :age => time_tag(created))
+  end
+  
+  def time_tag(time)
+    text = distance_of_time_in_words(Time.now, time)
+    if @project
+      link_to(text, {:controller => 'projects', :action => 'activity', :id => @project, :from => time.to_date}, :title => format_time(time))
+    else
+      content_tag('acronym', text, :title => format_time(time))
+    end
   end
 
   def syntax_highlight(name, content)
@@ -436,7 +462,7 @@ module ApplicationHelper
     #     export:some/file -> Force the download of the file
     #  Forum messages:
     #     message#1218 -> Link to message with id 1218
-    text = text.gsub(%r{([\s\(,\-\>]|^)(!)?(attachment|document|version|commit|source|export|message)?((#|r)(\d+)|(:)([^"\s<>][^\s<>]*?|"[^"]+?"))(?=(?=[[:punct:]]\W)|\s|<|$)}) do |m|
+    text = text.gsub(%r{([\s\(,\-\>]|^)(!)?(attachment|document|version|commit|source|export|message)?((#|r)(\d+)|(:)([^"\s<>][^\s<>]*?|"[^"]+?"))(?=(?=[[:punct:]]\W)|,|\s|<|$)}) do |m|
       leading, esc, prefix, sep, oid = $1, $2, $3, $5 || $7, $6 || $8
       link = nil
       if esc.nil?
@@ -621,6 +647,7 @@ module ApplicationHelper
   # +user+ can be a User or a string that will be scanned for an email address (eg. 'joe <joe@foo.bar>')
   def avatar(user, options = { })
     if Setting.gravatar_enabled?
+      options.merge!({:ssl => Setting.protocol == 'https'})
       email = nil
       if user.respond_to?(:mail)
         email = user.mail

@@ -21,7 +21,7 @@ require 'news_controller'
 # Re-raise errors caught by the controller.
 class NewsController; def rescue_action(e) raise e end; end
 
-class NewsControllerTest < Test::Unit::TestCase
+class NewsControllerTest < ActionController::TestCase
   fixtures :projects, :users, :roles, :members, :member_roles, :enabled_modules, :news, :comments
   
   def setup
@@ -177,6 +177,15 @@ class NewsControllerTest < Test::Unit::TestCase
     assert_not_nil comment
     assert_equal 'This is a NewsControllerTest comment', comment.comments
     assert_equal User.find(2), comment.author
+  end
+  
+  def test_empty_comment_should_not_be_added
+    @request.session[:user_id] = 2
+    assert_no_difference 'Comment.count' do
+      post :add_comment, :id => 1, :comment => { :comments => '' }
+      assert_response :success
+      assert_template 'show'
+    end
   end
   
   def test_destroy_comment

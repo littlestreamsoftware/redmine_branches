@@ -20,8 +20,13 @@ class Project < ActiveRecord::Base
   STATUS_ACTIVE     = 1
   STATUS_ARCHIVED   = 9
   
-  has_many :members, :include => :user, :conditions => "#{User.table_name}.status=#{User::STATUS_ACTIVE}"
+  has_many :members, :include => :user, :conditions => "#{User.table_name}.type='User' AND #{User.table_name}.status=#{User::STATUS_ACTIVE}"
+  has_many :member_principals, :class_name => 'Member', 
+                               :include => :principal,
+                               :conditions => "#{Principal.table_name}.type='Group' OR (#{Principal.table_name}.type='User' AND #{Principal.table_name}.status=#{User::STATUS_ACTIVE})"
   has_many :users, :through => :members
+  has_many :principals, :through => :member_principals, :source => :principal
+  
   has_many :enabled_modules, :dependent => :delete_all
   has_and_belongs_to_many :trackers, :order => "#{Tracker.table_name}.position"
   has_many :issues, :dependent => :destroy, :order => "#{Issue.table_name}.created_on DESC", :include => [:status, :tracker]
@@ -63,7 +68,9 @@ class Project < ActiveRecord::Base
   validates_length_of :identifier, :in => 1..20
   # donwcase letters, digits, dashes but not digits only
   validates_format_of :identifier, :with => /^(?!\d+$)[a-z0-9\-]*$/, :if => Proc.new { |p| p.identifier_changed? }
-  
+  # reserved words
+  validates_exclusion_of :identifier, :in => %w( new )
+
   before_destroy :delete_all_members
 
   named_scope :has_module, lambda { |mod| { :conditions => ["#{Project.table_name}.id IN (SELECT em.project_id FROM #{EnabledModule.table_name} em WHERE em.name=?)", mod.to_s] } }
@@ -122,7 +129,7 @@ class Project < ActiveRecord::Base
     if perm = Redmine::AccessControl.permission(permission)
       unless perm.project_module.nil?
         # If the permission belongs to a project module, make sure the module is enabled
-        base_statement << " AND EXISTS (SELECT em.id FROM #{EnabledModule.table_name} em WHERE em.name='#{perm.project_module}' AND em.project_id=#{Project.table_name}.id)"
+        base_statement << " AND #{Project.table_name}.id IN (SELECT em.project_id FROM #{EnabledModule.table_name} em WHERE em.name='#{perm.project_module}')"
       end
     end
     if options[:project]

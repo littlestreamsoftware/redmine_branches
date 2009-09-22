@@ -33,6 +33,16 @@ gl:
         # separator: 
         delimiter: "" 
         precision: 1
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "Byte"
+            other: "Bytes"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
   
   
   date:
@@ -250,7 +260,7 @@ gl:
   field_is_public: Público
   field_is_required: Obrigatorio
   field_issue: Petición
-  field_issue_to_id: Petición relacionada
+  field_issue_to: Petición relacionada
   field_language: Idioma
   field_last_login_on: Última conexión
   field_lastname: Apelido
@@ -642,7 +652,7 @@ gl:
   notice_default_data_loaded: Configuración por defecto cargada correctamente.
   notice_email_error: "Ocorreu un error enviando o correo ({{value}})"
   notice_email_sent: "Enviouse un correo a {{value}}"
-  notice_failed_to_save_issues: "Imposible gravar %s petición(s) en {{count}} seleccionado: {{value}}."
+  notice_failed_to_save_issues: "Imposible gravar %s petición(s) en {{count}} seleccionado: {{ids}}."
   notice_feeds_access_key_reseted: A súa clave de acceso para RSS reiniciouse.
   notice_file_not_found: A páxina á que tenta acceder non existe.
   notice_locking_conflict: Os datos modificáronse por outro usuario.
@@ -771,9 +781,6 @@ gl:
   text_issue_updated: "A petición {{id}} actualizouse por {{author}}."
   text_issues_destroy_confirmation: '¿Seguro que quere borrar as peticións seleccionadas?'
   text_issues_ref_in_commit_messages: Referencia e petición de corrección nas mensaxes
-  text_journal_changed: "cambiado de {{old}} a {{new}}"
-  text_journal_deleted: suprimido
-  text_journal_set_to: "fixado a {{value}}"
   text_length_between: "Lonxitude entre {{min}} e {{max}} caracteres."
   text_load_default_configuration: Cargar a configuración por defecto
   text_min_max_length_info: 0 para ningunha restrición
@@ -830,3 +837,15 @@ gl:
   mail_body_wiki_content_updated: The '{{page}}' wiki page has been updated by {{author}}.
   permission_add_project: Create project
   setting_new_project_user_role_id: Role given to a non-admin user who creates a project
+  label_view_all_revisions: View all revisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

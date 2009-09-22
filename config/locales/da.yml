@@ -85,7 +85,16 @@ da:
         # separator: 
         delimiter: ""
         precision: 1
-      storage_units: [Bytes, KB, MB, GB, TB]
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "Byte"
+            other: "Bytes"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
     percentage:
       format:
         # separator:
@@ -250,7 +259,7 @@ da:
   field_spent_on: Dato
   field_identifier: Identifikator
   field_is_filter: Brugt som et filter
-  field_issue_to_id: Beslægtede sag
+  field_issue_to: Beslægtede sag
   field_delay: Udsættelse
   field_assignable: Sager kan tildeles denne rolle
   field_redirect_existing_links: Videresend eksisterende links
@@ -645,9 +654,6 @@ da:
   text_project_destroy_confirmation: Er du sikker på at du vil slette dette projekt og alle relaterede data?
   text_workflow_edit: Vælg en rolle samt en type, for at redigere arbejdsgangen
   text_are_you_sure: Er du sikker?
-  text_journal_changed: "ændret fra {{old}} til {{new}}"
-  text_journal_set_to: "sat til {{value}}"
-  text_journal_deleted: slettet
   text_tip_task_begin_day: opgaven begynder denne dag
   text_tip_task_end_day: opaven slutter denne dag
   text_tip_task_begin_end_day: opgaven begynder og slutter denne dag
@@ -831,3 +837,15 @@ da:
   mail_body_wiki_content_updated: The '{{page}}' wiki page has been updated by {{author}}.
   permission_add_project: Create project
   setting_new_project_user_role_id: Role given to a non-admin user who creates a project
+  label_view_all_revisions: View all revisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

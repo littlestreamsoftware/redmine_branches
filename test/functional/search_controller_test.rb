@@ -4,7 +4,7 @@ require 'search_controller'
 # Re-raise errors caught by the controller.
 class SearchController; def rescue_action(e) raise e end; end
 
-class SearchControllerTest < Test::Unit::TestCase
+class SearchControllerTest < ActionController::TestCase
   fixtures :projects, :enabled_modules, :roles, :users, :members, :member_roles,
            :issues, :trackers, :issue_statuses,
            :custom_fields, :custom_values,
@@ -41,8 +41,8 @@ class SearchControllerTest < Test::Unit::TestCase
                     :sibling => { :tag => 'dd', :content => /should be classified by categories/ }
     
     assert assigns(:results_by_type).is_a?(Hash)
-    assert_equal 4, assigns(:results_by_type)['changesets']
-    assert_tag :a, :content => 'Changesets (4)'
+    assert_equal 5, assigns(:results_by_type)['changesets']
+    assert_tag :a, :content => 'Changesets (5)'
   end
   
   def test_search_issues

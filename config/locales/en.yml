@@ -59,6 +59,23 @@ en:
       over_x_years:
         one:   "over 1 year"
         other: "over {{count}} years"
+
+  number:
+    human:
+      format:
+        delimiter: ""
+        precision: 1
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "Byte"
+            other: "Bytes"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
+
         
 # Used in array.to_sentence.
   support:
@@ -136,6 +153,8 @@ en:
   error_scm_command_failed: "An error occurred when trying to access the repository: {{value}}"
   error_scm_annotate: "The entry does not exist or can not be annotated."
   error_issue_not_found_in_project: 'The issue was not found or does not belong to this project'
+  error_no_tracker_in_project: 'No tracker is associated to this project. Please check the Project settings.'
+  error_no_default_issue_status: 'No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").'
   
   warning_attachments_not_saved: "{{count}} file(s) could not be saved."
   
@@ -231,7 +250,7 @@ en:
   field_spent_on: Date
   field_identifier: Identifier
   field_is_filter: Used as a filter
-  field_issue_to_id: Related issue
+  field_issue_to: Related issue
   field_delay: Delay
   field_assignable: Issues can be assigned to this role
   field_redirect_existing_links: Redirect existing links
@@ -543,6 +562,8 @@ en:
   label_browse: Browse
   label_modification: "{{count}} change"
   label_modification_plural: "{{count}} changes"
+  label_branch: Branch
+  label_tag: Tag 
   label_revision: Revision
   label_revision_plural: Revisions
   label_associated_revisions: Associated revisions
@@ -554,6 +575,7 @@ en:
   label_latest_revision: Latest revision
   label_latest_revision_plural: Latest revisions
   label_view_revisions: View revisions
+  label_view_all_revisions: View all revisions
   label_max_size: Maximum size
   label_sort_highest: Move to top
   label_sort_higher: Move up
@@ -678,6 +700,10 @@ en:
   label_date_from_to: From {{start}} to {{end}}
   label_wiki_content_added: Wiki page added
   label_wiki_content_updated: Wiki page updated
+  label_group: Group
+  label_group_plural: Groups
+  label_group_new: New group
+  label_time_entry_plural: Spent time
   
   button_login: Login
   button_submit: Submit
@@ -730,9 +756,9 @@ en:
   text_subprojects_destroy_warning: "Its subproject(s): {{value}} will be also deleted."
   text_workflow_edit: Select a role and a tracker to edit the workflow
   text_are_you_sure: Are you sure ?
-  text_journal_changed: "changed from {{old}} to {{new}}"
-  text_journal_set_to: "set to {{value}}"
-  text_journal_deleted: deleted
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"
   text_tip_task_begin_day: task beginning this day
   text_tip_task_end_day: task ending this day
   text_tip_task_begin_end_day: task beginning and ending this day

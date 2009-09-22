@@ -92,6 +92,16 @@ tr:
         delimiter: '.'
         separator: ','
         precision: 2
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "Byte"
+            other: "Bytes"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
 
   support:
     array:
@@ -259,7 +269,7 @@ tr:
   field_spent_on: Tarih
   field_identifier: Tanımlayıcı
   field_is_filter: filtre olarak kullanılmış
-  field_issue_to_id: İlişkili ileti
+  field_issue_to: İlişkili ileti
   field_delay: Gecikme
   field_assignable: Bu role atanabilecek iletiler
   field_redirect_existing_links: Mevcut bağlantıları tekrar yönlendir
@@ -837,3 +847,12 @@ tr:
   mail_body_wiki_content_updated: The '{{page}}' wiki page has been updated by {{author}}.
   permission_add_project: Create project
   setting_new_project_user_role_id: Role given to a non-admin user who creates a project
+  label_view_all_revisions: View all revisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

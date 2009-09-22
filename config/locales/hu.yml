@@ -90,7 +90,16 @@
       format:
         delimiter: ""
         precision: 1
-      storage_units: [bájt, KB, MB, GB, TB]
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "bájt"
+            other: "bájt"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
 
   support:
     array:
@@ -259,7 +268,7 @@
   field_spent_on: Dátum
   field_identifier: Azonosító
   field_is_filter: Szűrőként használható
-  field_issue_to_id: Kapcsolódó feladat
+  field_issue_to: Kapcsolódó feladat
   field_delay: Késés
   field_assignable: Feladat rendelhető ehhez a szerepkörhöz
   field_redirect_existing_links: Létező linkek átirányítása
@@ -668,9 +677,6 @@
   text_subprojects_destroy_warning: "Az alprojekt(ek): {{value}} szintén törlésre kerülnek."
   text_workflow_edit: Válasszon egy szerepkört, és egy trackert a workflow szerkesztéséhez
   text_are_you_sure: Biztos benne ?
-  text_journal_changed: "változás: {{old}} volt, {{new}} lett"
-  text_journal_set_to: "beállítva: {{value}}"
-  text_journal_deleted: törölve
   text_tip_task_begin_day: a feladat ezen a napon kezdődik
   text_tip_task_end_day: a feladat ezen a napon ér véget
   text_tip_task_begin_end_day: a feladat ezen a napon kezdődik és ér véget
@@ -836,3 +842,15 @@
   mail_body_wiki_content_updated: A '{{page}}' wiki oldalt {{author}} frissítette.
   permission_add_project: Projekt létrehozása
   setting_new_project_user_role_id: Projekt létrehozási jog nem adminisztrátor felhasználóknak
+  label_view_all_revisions: View all revisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

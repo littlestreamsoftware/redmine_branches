@@ -17,7 +17,7 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class ProjectTest < Test::Unit::TestCase
+class ProjectTest < ActiveSupport::TestCase
   fixtures :projects, :enabled_modules, 
            :issues, :issue_statuses, :journals, :journal_details,
            :users, :members, :member_roles, :roles, :projects_trackers, :trackers, :boards,
@@ -52,13 +52,26 @@ class ProjectTest < Test::Unit::TestCase
     to_test = {"abc" => true,
                "ab12" => true,
                "ab-12" => true,
-               "12" => false}
+               "12" => false,
+               "new" => false}
                
     to_test.each do |identifier, valid|
       p = Project.new
       p.identifier = identifier
       p.valid?
       assert_equal valid, p.errors.on('identifier').nil?
+    end
+  end
+  
+  def test_members_should_be_active_users
+    Project.all.each do |project|
+      assert_nil project.members.detect {|m| !(m.user.is_a?(User) && m.user.active?) }
+    end
+  end
+  
+  def test_users_should_be_active_users
+    Project.all.each do |project|
+      assert_nil project.users.detect {|u| !(u.is_a?(User) && u.active?) }
     end
   end
   

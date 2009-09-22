@@ -59,6 +59,22 @@ cs:
       over_x_years:
         one:   "více než 1 rok"
         other: "více než {{count}} roky"
+
+  number: 
+    human: 
+      format: 
+        precision: 1
+        delimiter: ""
+      storage_units: 
+        format: "%n %u"
+        units: 
+          kb: KB
+          tb: TB
+          gb: GB
+          byte: 
+            one: Byte
+            other: Bytes
+          mb: MB
         
 # Used in array.to_sentence.
   support:
@@ -226,7 +242,7 @@ cs:
   field_spent_on: Datum
   field_identifier: Identifikátor
   field_is_filter: Použít jako filtr
-  field_issue_to_id: Související úkol
+  field_issue_to: Související úkol
   field_delay: Zpoždění
   field_assignable: Úkoly mohou být přiřazeny této roli
   field_redirect_existing_links: Přesměrovat stvávající odkazy
@@ -632,9 +648,6 @@ cs:
   text_project_destroy_confirmation: Jste si jisti, že chcete odstranit tento projekt a všechna související data ?
   text_workflow_edit: Vyberte roli a frontu k editaci workflow
   text_are_you_sure: Jste si jisti?
-  text_journal_changed: "změněno z {{old}} na {{new}}"
-  text_journal_set_to: "nastaveno na {{value}}"
-  text_journal_deleted: odstraněno
   text_tip_task_begin_day: úkol začíná v tento den
   text_tip_task_end_day: úkol končí v tento den
   text_tip_task_begin_end_day: úkol začíná a končí v tento den
@@ -804,3 +817,15 @@ cs:
   mail_body_wiki_content_updated: The '{{page}}' wiki page has been updated by {{author}}.
   permission_add_project: Create project
   setting_new_project_user_role_id: Role given to a non-admin user who creates a project
+  label_view_all_revisions: View all revisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

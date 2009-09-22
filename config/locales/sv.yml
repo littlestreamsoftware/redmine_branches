@@ -47,7 +47,16 @@ sv:
         # separator: 
         delimiter: ""
         # precision: 1
-      storage_units: [Byte, KB, MB, GB, TB]
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "Byte"
+            other: "Bytes"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
 
   # Used in distance_of_time_in_words(), distance_of_time_in_words_to_now(), time_ago_in_words()
   datetime:
@@ -194,6 +203,8 @@ sv:
   error_scm_command_failed: "Ett fel inträffade vid försök att nå versionsarkivet: {{value}}"
   error_scm_annotate: "Inlägget existerar inte eller kan inte kommenteras."
   error_issue_not_found_in_project: 'Ärendet hittades inte eller så tillhör det inte detta projekt'
+  error_no_tracker_in_project: Ingen ärendetyp är associerad med projektet. Vänligen kontrollera projektinställningarna.
+  error_no_default_issue_status: Ingen status är definierad som standard för nya ärenden. Vänligen kontrollera din konfiguration (Gå till "Administration -> Ärendestatus").
   
   warning_attachments_not_saved: "{{count}} fil(er) kunde inte sparas."
   
@@ -289,7 +300,7 @@ sv:
   field_spent_on: Datum
   field_identifier: Identifierare
   field_is_filter: Använd som filter
-  field_issue_to_id: Relaterade ärenden
+  field_issue_to: Relaterade ärenden
   field_delay: Fördröjning
   field_assignable: Ärenden kan tilldelas denna roll
   field_redirect_existing_links: Omdirigera existerande länkar
@@ -600,6 +611,8 @@ sv:
   label_browse: Bläddra
   label_modification: "{{count}} ändring"
   label_modification_plural: "{{count}} ändringar"
+  label_branch: Branch
+  label_tag: Tag
   label_revision: Revision
   label_revision_plural: Revisioner
   label_associated_revisions: Associerade revisioner
@@ -611,6 +624,7 @@ sv:
   label_latest_revision: Senaste revisionen
   label_latest_revision_plural: Senaste revisionerna
   label_view_revisions: Visa revisioner
+  label_view_all_revisions: Visa alla revisioner
   label_max_size: Maxstorlek
   label_sort_highest: Flytta till toppen
   label_sort_higher: Flytta upp
@@ -787,9 +801,9 @@ sv:
   text_subprojects_destroy_warning: "Alla underprojekt: {{value}} kommer också tas bort."
   text_workflow_edit: Välj en roll och en ärendetyp för att ändra arbetsflöde
   text_are_you_sure: Är du säker ?
-  text_journal_changed: "ändrad från {{old}} till {{new}}"
-  text_journal_set_to: "satt till {{value}}"
-  text_journal_deleted: borttagen
+  text_journal_changed: "{{label}} ändrad från {{old}} till {{new}}"
+  text_journal_set_to: "{{label}} satt till {{value}}"
+  text_journal_deleted: "{{label}} borttagen"
   text_tip_task_begin_day: arbetsuppgift som börjar denna dag
   text_tip_task_end_day: arbetsuppgift som slutar denna dag
   text_tip_task_begin_end_day: arbetsuppgift börjar och slutar denna dag
@@ -858,3 +872,7 @@ sv:
   enumeration_issue_priorities: Ärendeprioriteter
   enumeration_doc_categories: Dokumentkategorier
   enumeration_activities: Aktiviteter (tidsuppföljning)
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

@@ -96,6 +96,16 @@ ja:
       format:
         delimiter: ""
         precision: 1
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "Byte"
+            other: "Bytes"
+          kb: "KB"
+          mb: "MB"
+          gb: "GB"
+          tb: "TB"
 
   activerecord:
     errors:
@@ -268,7 +278,7 @@ ja:
   field_spent_on: 日付
   field_identifier: 識別子
   field_is_filter: フィルタとして使う
-  field_issue_to_id: 関連するチケット
+  field_issue_to: 関連するチケット
   field_delay: 遅延
   field_assignable: チケットはこのロールに割り当てることができます
   field_redirect_existing_links: 既存のリンクをリダイレクトする
@@ -767,9 +777,6 @@ ja:
   text_subprojects_destroy_warning: "サブプロジェクト {{value}} も削除されます。"
   text_workflow_edit: ワークフローを編集するロールとトラッカーを選んでください
   text_are_you_sure: よろしいですか？
-  text_journal_changed: "{{old}}から{{new}}に変更"
-  text_journal_set_to: "{{value}}にセット"
-  text_journal_deleted: 削除
   text_tip_task_begin_day: この日に開始するタスク
   text_tip_task_end_day: この日に終了するタスク
   text_tip_task_begin_end_day: この日のうちに開始して終了するタスク
@@ -838,3 +845,15 @@ ja:
   enumeration_issue_priorities: チケットの優先度
   enumeration_doc_categories: 文書カテゴリ
   enumeration_activities: 作業分類 (時間トラッキング)
+  label_view_all_revisions: View all revisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

@@ -59,6 +59,22 @@ sk:
       over_x_years:
         one:   "cez 1 rok"
         other: "cez {{count}} roky/ov"
+
+  number: 
+    human: 
+      format: 
+        precision: 1
+        delimiter: ""
+      storage_units: 
+        format: "%n %u"
+        units: 
+          kb: KB
+          tb: TB
+          gb: GB
+          byte: 
+            one: Byte
+            other: Bytes
+          mb: MB
         
 # Used in array.to_sentence.
   support:
@@ -224,7 +240,7 @@ sk:
   field_spent_on: Dátum
   field_identifier: Identifikátor
   field_is_filter: Použiť ako filter
-  field_issue_to_id: Súvisiaca úloha
+  field_issue_to: Súvisiaca úloha
   field_delay: Oneskorenie
   field_assignable: Úlohy môžu byť priradené tejto roli
   field_redirect_existing_links: Presmerovať existujúce odkazy
@@ -630,9 +646,6 @@ sk:
   text_project_destroy_confirmation: Ste si istý, že chcete odstránit tento projekt a všetky súvisiace dáta ?
   text_workflow_edit: Vyberte rolu a frontu k úprave workflow
   text_are_you_sure: Ste si istý?
-  text_journal_changed: "zmenené z {{old}} na {{new}}"
-  text_journal_set_to: "nastavené na {{value}}"
-  text_journal_deleted: odstránené
   text_tip_task_begin_day: úloha začína v tento deň
   text_tip_task_end_day: úloha končí v tento deň
   text_tip_task_begin_end_day: úloha začína a končí v tento deň
@@ -802,4 +815,16 @@ sk:
   label_wiki_content_updated: Wiki stránka aktualizovaná
   mail_body_wiki_content_updated: Wiki stránka '{{page}}' bola aktualizovaná užívateľom {{author}}.
   setting_repositories_encodings: Kódovanie repozitára
-  setting_new_project_user_role_id: Rola dána non-admin užívateľovi, ktorý vytvorí projekt   
+  setting_new_project_user_role_id: Rola dána non-admin užívateľovi, ktorý vytvorí projekt
+  label_view_all_revisions: View all revisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"
+  label_group_plural: Groups
+  label_group: Group
+  label_group_new: New group
+  label_time_entry_plural: Spent time

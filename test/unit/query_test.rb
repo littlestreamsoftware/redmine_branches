@@ -17,7 +17,7 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class QueryTest < Test::Unit::TestCase
+class QueryTest < ActiveSupport::TestCase
   fixtures :projects, :enabled_modules, :users, :members, :member_roles, :roles, :trackers, :issue_statuses, :issue_categories, :enumerations, :issues, :watchers, :custom_fields, :custom_values, :versions, :queries
 
   def test_custom_fields_for_all_projects_should_be_available_in_global_queries
@@ -150,15 +150,17 @@ class QueryTest < Test::Unit::TestCase
 
   def test_operator_contains
     query = Query.new(:project => Project.find(1), :name => '_')
-    query.add_filter('subject', '~', ['string'])
-    assert query.statement.include?("#{Issue.table_name}.subject LIKE '%string%'")
-    find_issues_with_query(query)
+    query.add_filter('subject', '~', ['uNable'])
+    assert query.statement.include?("LOWER(#{Issue.table_name}.subject) LIKE '%unable%'")
+    result = find_issues_with_query(query)
+    assert result.empty?
+    result.each {|issue| assert issue.subject.downcase.include?('unable') }
   end
   
   def test_operator_does_not_contains
     query = Query.new(:project => Project.find(1), :name => '_')
-    query.add_filter('subject', '!~', ['string'])
-    assert query.statement.include?("#{Issue.table_name}.subject NOT LIKE '%string%'")
+    query.add_filter('subject', '!~', ['uNable'])
+    assert query.statement.include?("LOWER(#{Issue.table_name}.subject) NOT LIKE '%unable%'")
     find_issues_with_query(query)
   end
   

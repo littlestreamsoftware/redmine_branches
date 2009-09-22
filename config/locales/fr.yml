@@ -84,7 +84,16 @@ fr:
     human:
       format:
         precision: 2
-      storage_units: [ Octet, ko, Mo, Go, To ]
+      storage_units:
+        format: "%n %u"
+        units:
+          byte:
+            one: "Octet"
+            other: "Octet"
+          kb: "ko"
+          mb: "Mo"
+          gb: "Go"
+          tb: "To"
   
   support:
     array:
@@ -263,7 +272,7 @@ fr:
   field_spent_on: Date
   field_identifier: Identifiant
   field_is_filter: Utilisé comme filtre
-  field_issue_to_id: Demande liée
+  field_issue_to: Demande liée
   field_delay: Retard
   field_assignable: Demandes assignables à ce rôle
   field_redirect_existing_links: Rediriger les liens existants
@@ -708,6 +717,10 @@ fr:
   label_date_from_to: Du {{start}} au {{end}}
   label_wiki_content_added: Page wiki ajoutée
   label_wiki_content_updated: Page wiki mise à jour
+  label_group_plural: Groupes
+  label_group: Groupe
+  label_group_new: Nouveau groupe
+  label_time_entry_plural: Temps passé
   
   button_login: Connexion
   button_submit: Soumettre
@@ -760,9 +773,6 @@ fr:
   text_subprojects_destroy_warning: "Ses sous-projets: {{value}} seront également supprimés."
   text_workflow_edit: Sélectionner un tracker et un rôle pour éditer le workflow
   text_are_you_sure: Etes-vous sûr ?
-  text_journal_changed: "changé de {{old}} à {{new}}"
-  text_journal_set_to: "mis à {{value}}"
-  text_journal_deleted: supprimé
   text_tip_task_begin_day: tâche commençant ce jour
   text_tip_task_end_day: tâche finissant ce jour
   text_tip_task_begin_end_day: tâche commençant et finissant ce jour
@@ -832,4 +842,12 @@ fr:
   enumeration_doc_categories: Catégories des documents
   enumeration_activities: Activités (suivi du temps)
   label_greater_or_equal: ">="
-  label_less_or_equal: <=
+  label_less_or_equal: "<="
+  label_view_all_revisions: Voir toutes les révisions
+  label_tag: Tag
+  label_branch: Branch
+  error_no_tracker_in_project: No tracker is associated to this project. Please check the Project settings.
+  error_no_default_issue_status: No default issue status is defined. Please check your configuration (Go to "Administration -> Issue statuses").
+  text_journal_changed: "{{label}} changed from {{old}} to {{new}}"
+  text_journal_set_to: "{{label}} set to {{value}}"
+  text_journal_deleted: "{{label}} deleted"

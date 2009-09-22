@@ -6,11 +6,6 @@ ActionController::Routing::Routes.draw do |map|
   # map.connect 'products/:id', :controller => 'catalog', :action => 'view'
   # Keep in mind you can assign values other than :controller and :action
 
-  # Allow Redmine plugins to map routes and potentially override them
-  Rails.plugins.each do |plugin|
-    map.from_plugin plugin.name.to_sym
-  end
-
   map.home '', :controller => 'welcome'
   
   map.signin 'login', :controller => 'account', :action => 'login'
@@ -218,7 +213,7 @@ ActionController::Routing::Routes.draw do |map|
       repository_views.connect 'projects/:id/repository/revisions/:rev', :action => 'revision'
       repository_views.connect 'projects/:id/repository/revisions/:rev/diff', :action => 'diff'
       repository_views.connect 'projects/:id/repository/revisions/:rev/diff.:format', :action => 'diff'
-      repository_views.connect 'projects/:id/repository/revisions/:rev/:action/*path'
+      repository_views.connect 'projects/:id/repository/revisions/:rev/:action/*path', :requirements => { :rev => /[a-z0-9\.\-_]+/ }
       repository_views.connect 'projects/:id/repository/:action/*path'
     end
     
@@ -229,7 +224,8 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'attachments/:id/:filename', :controller => 'attachments', :action => 'show', :id => /\d+/, :filename => /.*/
   map.connect 'attachments/download/:id/:filename', :controller => 'attachments', :action => 'download', :id => /\d+/, :filename => /.*/
    
-
+  map.resources :groups
+  
   #left old routes at the bottom for backwards compat
   map.connect 'projects/:project_id/issues/:action', :controller => 'issues'
   map.connect 'projects/:project_id/documents/:action', :controller => 'documents'

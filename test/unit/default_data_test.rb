@@ -17,7 +17,7 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class DefaultDataTest < Test::Unit::TestCase
+class DefaultDataTest < ActiveSupport::TestCase
   include Redmine::I18n
   fixtures :roles
   
@@ -38,6 +38,9 @@ class DefaultDataTest < Test::Unit::TestCase
         IssueStatus.delete_all
         Enumeration.delete_all
         assert Redmine::DefaultData::Loader::load(lang)
+        assert_not_nil DocumentCategory.first
+        assert_not_nil IssuePriority.first
+        assert_not_nil TimeEntryActivity.first
       rescue ActiveRecord::RecordInvalid => e
         assert false, ":#{lang} default data is invalid (#{e.message})."
       end
