@@ -235,9 +235,15 @@ module Redmine
         gc.stroke('transparent')
         events.each do |i|      
           if i.is_a?(Issue)       
-            i_start_date = (i.start_date >= @date_from ? i.start_date : @date_from )
+            # Handle nil start_dates, rare but can happen.
+            i_start_date =  if i.start_date && i.start_date >= @date_from
+                              i.start_date
+                            else
+                              @date_from
+                            end
+
             i_end_date = (i.due_before <= date_to ? i.due_before : date_to )        
-            i_done_date = i.start_date + ((i.due_before - i.start_date+1)*i.done_ratio/100).floor
+            i_done_date = i_start_date + ((i.due_before - i_start_date+1)*i.done_ratio/100).floor
             i_done_date = (i_done_date <= @date_from ? @date_from : i_done_date )
             i_done_date = (i_done_date >= date_to ? date_to : i_done_date )        
             i_late_date = [i_end_date, Date.today].min if i_start_date < Date.today

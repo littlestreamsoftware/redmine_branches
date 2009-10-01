@@ -62,11 +62,17 @@ module GanttHelper
     
     output = ''
     events.each do |i| 
-      if i.is_a? Issue 
-        i_start_date = (i.start_date >= @gantt.date_from ? i.start_date : @gantt.date_from )
+      if i.is_a? Issue
+        # Handle nil start_dates, rare but can happen.
+        i_start_date =  if i.start_date && i.start_date >= @gantt.date_from
+                          i.start_date
+                        else
+                          @gantt.date_from
+                        end
+
         i_end_date = (i.due_before <= @gantt.date_to ? i.due_before : @gantt.date_to )
 	
-        i_done_date = i.start_date + ((i.due_before - i.start_date+1)*i.done_ratio/100).floor
+        i_done_date = i_start_date + ((i.due_before - i_start_date+1)*i.done_ratio/100).floor
         i_done_date = (i_done_date <= @gantt.date_from ? @gantt.date_from : i_done_date )
         i_done_date = (i_done_date >= @gantt.date_to ? @gantt.date_to : i_done_date )
 	
