@@ -36,8 +36,6 @@ module GanttHelper
         output << ":"
         output << h(i.subject)
       elsif i.is_a? Version
-        output << '<span class="icon icon-package">'
-        output << h("#{i.project} -") unless @project && @project == i.project
         output << link_to_version(i)
       else
         # Nothing
