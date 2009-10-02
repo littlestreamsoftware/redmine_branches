@@ -272,6 +272,11 @@ module Redmine
           end
           top = top + 20
           if i.is_a? Version
+            # Remove the project requirement for Versions because it will
+            # restrict issues to only be on the current project.  This
+            # ends up missing issues which are assigned to shared versions.
+            query.project = nil if query.project
+
             issues = i.fixed_issues.for_gantt.with_query(query)
             if issues
               image_tasks(gc, :top => top, :zoom => zoom, :events => issues, :subject_width => subject_width)

@@ -516,6 +516,11 @@ module Redmine
           pdf.SetDrawColor(0, 0, 0)
 
           if i.is_a? Version
+            # Remove the project requirement for Versions because it will
+            # restrict issues to only be on the current project.  This
+            # ends up missing issues which are assigned to shared versions.
+            @query.project = nil if @query.project
+
             issues = i.fixed_issues.for_gantt.with_query(@query)
             if issues
               tasks(pdf, gantt, :top => top, :zoom => zoom, :events => issues, :subject_width => subject_width, :g_width => g_width, :indent => indent + 5)
