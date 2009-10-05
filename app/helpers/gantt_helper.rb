@@ -197,7 +197,8 @@ module GanttHelper
 
   def line_for_issue(issue, options)
     output = ''
-    if issue.is_a? Issue
+    # Skip issues that don't have a due_before (due_date or version's due_date)
+    if issue.is_a?(Issue) && issue.due_before
       # Handle nil start_dates, rare but can happen.
       i_start_date =  if issue.start_date && issue.start_date >= @gantt.date_from
                         issue.start_date
@@ -206,14 +207,7 @@ module GanttHelper
                       end
 
       i_end_date = ((issue.due_before && issue.due_before <= @gantt.date_to) ? issue.due_before : @gantt.date_to )
-
-      if issue.due_before
-        i_done_date = i_start_date + ((issue.due_before - i_start_date+1)*issue.done_ratio/100).floor
-      else
-        # TODO: not sure what to do if due_before is nil
-        i_done_date = i_start_date + ((@gantt.date_to - i_start_date+1)*issue.done_ratio/100).floor
-      end
-
+      i_done_date = i_start_date + ((issue.due_before - i_start_date+1)*issue.done_ratio/100).floor
       i_done_date = (i_done_date <= @gantt.date_from ? @gantt.date_from : i_done_date )
       i_done_date = (i_done_date >= @gantt.date_to ? @gantt.date_to : i_done_date )
       
