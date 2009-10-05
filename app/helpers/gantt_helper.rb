@@ -164,13 +164,9 @@ module GanttHelper
 
   def line_for_version(version, options)
     output = ''
-    if version.is_a? Version
-      if version.start_date
+    # Skip versions that don't have a start_date
+    if version.is_a?(Version) && version.start_date
         i_left = ((version.start_date - @gantt.date_from)*options[:zoom]).floor
-      else
-        # TODO: need to handle nil effective_dates
-        i_left = ((Date.today - @gantt.date_from)*options[:zoom]).floor
-      end
 
         output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
         output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
