@@ -50,13 +50,13 @@ if @gantt.zoom >1
     headers_height = 2*header_heigth
     if @gantt.zoom > 2
         show_days = true
-        headers_height = 3*header_height
+        headers_height = 3*header_heigth
     end
 end
 
 g_width = (@gantt.date_to - @gantt.date_from + 1)*zoom
 # Collect the number of issues on Versions
-g_height = [(20 * (@gantt.events.length + number_of_issues_on_versions(@gantt)) + 6)+150, 206].max
+g_height = [(20 * (number_of_rows + 6))+150, 206].max
 t_height = g_height + headers_height
 %>
 <table width="100%" style="border:0; border-collapse: collapse;">

@@ -16,6 +16,41 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module GanttHelper
+  # Returns the number of rows that will be rendered on the Gantt chart
+  def number_of_rows
+    if @project
+      return number_of_rows_on_project(@project)
+    else
+      Project.roots.inject(0) do |total, project|
+        total += number_of_rows_on_project(project)
+      end
+    end
+  end
+
+  # Returns the number of rows that will be used to list a project on
+  # the Gantt chart.  This will recurse for each subproject.
+  def number_of_rows_on_project(project)
+    # One Root project
+    count = 1
+    # Issues without a Version
+    count += project.issues.for_gantt.without_version.with_query(@query).count
+
+    # Versions
+    count += project.versions.count
+
+    # Issues on the Versions
+    project.versions.each do |version|
+      count += version.fixed_issues.for_gantt.with_query(@query).count
+    end
+
+    # Subprojects
+    project.children.each do |subproject|
+      count += number_of_rows_on_project(subproject)
+    end
+
+    count
+  end
+  
   def number_of_issues_on_versions(gantt)
     versions = gantt.events.collect {|event| (event.is_a? Version) ? event : nil}.compact
 
