@@ -23,41 +23,105 @@ module GanttHelper
   end
   
   def tasks_subjects(options={})
-    events = options.delete(:events)
-    top = options.delete(:top)
-    indent = options.delete(:indent) || 4
-    
+    options = {:indent => 4}.merge(options)
+
+    # TODO: root project
+    # TODO: missing root (aka cross-project list)
+    projects = @query.project.children
+
     output = ''
-    events.each do |i|
-      output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{top}px;left:#{indent}px;overflow:hidden;'><small>    "
+    projects.each do |project|
+      output = tasks_subjects_for_project(project, options)
+    end
+
+    output
+  end
+
+  def tasks_subjects_for_project(project, options={})
+    output = ''
+    # Project Header
+    output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+    if project.is_a? Project
+      output << '<span class="icon icon-projects">'
+      output << link_to(h(project), {:controller => 'projects', :action => 'show', :id => project}, :class => "project")
+      output << '</span>'
+    else
+      puts '***** should be a Project'
+    end
+    output << "</small></div>"
+    options[:top] += 20
+    options[:indent] += 20
+    
+    # Second, Issues without a version
+    issues = project.issues.for_gantt.with_query(@query)
+    if issues
+      output << tasks_subjects_for_issues(issues, options)
+    end
+
+    # Third, Versions
+    project.versions.each do |version|
+      output << tasks_subjects_for_version(version, options)
+    end
+
+    # Fourth, subprojects
+    project.children.each do |project|
+      output << tasks_subjects_for_project(project, options)
+    end
+
+    # Remove indent to hit the next sibling
+    options[:indent] -= 20 
+    
+    output
+  end
+
+  def tasks_subjects_for_issues(issues, options={})
+    output = ''
+    issues.each do |i|
+      output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
       if i.is_a? Issue
+        output << '<span class="icon icon-issue">'
       	output << h("#{i.project} -") unless @project && @project == i.project
       	output << link_to_issue(i)
         output << ":"
         output << h(i.subject)
-      elsif i.is_a? Version
-        output << link_to_version(i)
+        output << '</span>'
       else
-        # Nothing
+        puts '***** should be a Issue'
       end
       output << "</small></div>"
-      top = top + 20
-      if i.is_a? Version
-        # Remove the project requirement for Versions because it will
-        # restrict issues to only be on the current project.  This
-        # ends up missing issues which are assigned to shared versions.
-        @query.project = nil if @query.project
-
-        issues = i.fixed_issues.for_gantt.with_query(@query)
-        if issues
-          output << tasks_subjects(:top => top, :events => issues, :indent => indent + 30)
-          top = top + (20 * issues.length) # Pad the top for each issue displayed
-        end
-      end
+      options[:top] += 20
     end
     output
   end
 
+  def tasks_subjects_for_version(version, options={})
+    output = ''
+    # Version header
+    output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+    if version.is_a? Version
+      output << '<span class="icon icon-package">'
+      output << link_to_version(version)
+      output << '</span>'
+    else
+      puts '***** should be a Version'
+    end
+    output << "</small></div>"
+    options[:top] += 20
+
+    # Remove the project requirement for Versions because it will
+    # restrict issues to only be on the current project.  This
+    # ends up missing issues which are assigned to shared versions.
+    @query.project = nil if @query.project
+    
+    issues = version.fixed_issues.for_gantt.with_query(@query)
+    if issues
+      output << tasks_subjects_for_issues(issues, options.merge({:indent => options[:indent] + 20}))
+      options[:top] += (20 * issues.length) # Pad the top for each issue displayed
+    end
+
+    output
+  end
+  
   def tasks(options)
     top = options.delete(:top)
     zoom = options.delete(:zoom)

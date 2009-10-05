@@ -837,6 +837,7 @@ padding-bottom: 3px;
 .icon-report  { background-image: url(../images/report.png); }
 .icon-comment  { background-image: url(../images/comment.png); }
 .icon-summary  { background-image: url(../images/lightning.png); }
+.icon-issue { background-image: url(../images/ticket.png); }
 
 .icon-file { background-image: url(../images/files/default.png); }
 .icon-file.text-plain { background-image: url(../images/files/text.png); }
