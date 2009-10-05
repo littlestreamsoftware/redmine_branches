@@ -163,13 +163,10 @@ module GanttHelper
   end
 
   def line_for_version(version, options)
-    # TODO:
-    i = version
-
     output = ''
-    if i.is_a? Version
-      if i.start_date
-        i_left = ((i.start_date - @gantt.date_from)*options[:zoom]).floor
+    if version.is_a? Version
+      if version.start_date
+        i_left = ((version.start_date - @gantt.date_from)*options[:zoom]).floor
       else
         # TODO: need to handle nil effective_dates
         i_left = ((Date.today - @gantt.date_from)*options[:zoom]).floor
@@ -177,8 +174,8 @@ module GanttHelper
 
         output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
         output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
-		output << h("#{i.project} -") unless @project && @project == i.project
-		output << "<strong>#{h i }</strong>"
+		output << h("#{version.project} -") unless @project && @project == version.project
+		output << "<strong>#{h version }</strong>"
       output << "</div>"
     end
 
@@ -187,17 +184,14 @@ module GanttHelper
   end
 
   def subject_for_issue(issue, options)
-        # TODO:
-    i = issue
-
     output = ''
     output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
-    if i.is_a? Issue
+    if issue.is_a? Issue
       output << '<span class="icon icon-issue">'
-      output << h("#{i.project} -") unless @project && @project == i.project
-      output << link_to_issue(i)
+      output << h("#{issue.project} -") unless @project && @project == issue.project
+      output << link_to_issue(issue)
       output << ":"
-      output << h(i.subject)
+      output << h(issue.subject)
       output << '</span>'
     else
       logger.warn "GanttHelper#tasks_subjects_for_issues was not given an issue"
@@ -206,25 +200,22 @@ module GanttHelper
   end
 
   def line_for_issue(issue, options)
-    # TODO:
-    i = issue
-    
     output = ''
-    if i.is_a? Issue
+    if issue.is_a? Issue
       # Handle nil start_dates, rare but can happen.
-      i_start_date =  if i.start_date && i.start_date >= @gantt.date_from
-                        i.start_date
+      i_start_date =  if issue.start_date && issue.start_date >= @gantt.date_from
+                        issue.start_date
                       else
                         @gantt.date_from
                       end
 
-      i_end_date = ((i.due_before && i.due_before <= @gantt.date_to) ? i.due_before : @gantt.date_to )
+      i_end_date = ((issue.due_before && issue.due_before <= @gantt.date_to) ? issue.due_before : @gantt.date_to )
 
-      if i.due_before
-        i_done_date = i_start_date + ((i.due_before - i_start_date+1)*i.done_ratio/100).floor
+      if issue.due_before
+        i_done_date = i_start_date + ((issue.due_before - i_start_date+1)*issue.done_ratio/100).floor
       else
         # TODO: not sure what to do if due_before is nil
-        i_done_date = i_start_date + ((@gantt.date_to - i_start_date+1)*i.done_ratio/100).floor
+        i_done_date = i_start_date + ((@gantt.date_to - i_start_date+1)*issue.done_ratio/100).floor
       end
 
       i_done_date = (i_done_date <= @gantt.date_from ? @gantt.date_from : i_done_date )
@@ -247,15 +238,15 @@ module GanttHelper
         output<< "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ d_width }px;' class='#{css} task task_done'>&nbsp;</div>"
       end
       output << "<div style='top:#{ options[:top] }px;left:#{ i_left + i_width + 5 }px;background:#fff;' class='#{css} task'>"
-      output << i.status.name
+      output << issue.status.name
       output << ' '
-      output << (i.done_ratio).to_i.to_s
+      output << (issue.done_ratio).to_i.to_s
       output << "%"
       output << "</div>"
 
       output << "<div class='tooltip' style='position: absolute;top:#{ options[:top] }px;left:#{ i_left }px;width:#{ i_width }px;height:12px;'>"
       output << '<span class="tip">'
-      output << render_issue_tooltip(i)
+      output << render_issue_tooltip(issue)
       output << "</span></div>"
     else
       logger.warn "GanttHelper#line_for_issue was not given an issue"
