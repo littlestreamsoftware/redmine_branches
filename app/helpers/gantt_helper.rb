@@ -46,7 +46,7 @@ module GanttHelper
       output << link_to(h(project), {:controller => 'projects', :action => 'show', :id => project}, :class => "project")
       output << '</span>'
     else
-      puts '***** should be a Project'
+      logger.warn "GanttHelper#tasks_subjects_for_project was not given a project"
     end
     output << "</small></div>"
     options[:top] += 20
@@ -86,7 +86,7 @@ module GanttHelper
         output << h(i.subject)
         output << '</span>'
       else
-        puts '***** should be a Issue'
+      logger.warn "GanttHelper#tasks_subjects_for_issues was not given an issue"
       end
       output << "</small></div>"
       options[:top] += 20
@@ -103,7 +103,7 @@ module GanttHelper
       output << link_to_version(version)
       output << '</span>'
     else
-      puts '***** should be a Version'
+      logger.warn "GanttHelper#tasks_subjects_for_version was not given a version"
     end
     output << "</small></div>"
     options[:top] += 20
