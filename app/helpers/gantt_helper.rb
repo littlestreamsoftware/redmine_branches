@@ -25,13 +25,13 @@ module GanttHelper
   def tasks_subjects(options={})
     options = {:indent => 4}.merge(options)
 
-    # TODO: root project
-    # TODO: missing root (aka cross-project list)
-    projects = @query.project.children
-
     output = ''
-    projects.each do |project|
-      output = tasks_subjects_for_project(project, options)
+    if @project
+      output << tasks_subjects_for_project(@project, options)
+    else
+      Project.roots.each do |project|
+        output << tasks_subjects_for_project(project, options)
+      end
     end
 
     output
