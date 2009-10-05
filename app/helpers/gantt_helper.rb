@@ -51,7 +51,7 @@ module GanttHelper
     options[:indent] += 20
     
     # Second, Issues without a version
-    issues = project.issues.for_gantt.with_query(@query)
+    issues = project.issues.for_gantt.without_version.with_query(@query)
     if issues
       output << tasks_subjects_for_issues(issues, options)
     end

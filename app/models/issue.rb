@@ -77,6 +77,20 @@ class Issue < ActiveRecord::Base
                    :conditions => ["(((start_date>=:from and start_date<=:to) or (effective_date>=:from and effective_date<=:to) or (start_date<:from and effective_date>:to)) and start_date is not null and due_date is null and effective_date is not null)", {:from => date_from, :to => date_to}]
                  })
   end
+
+  named_scope :for_gantt, lambda {
+    {
+      :include => [:tracker, :status, :assigned_to, :priority, :project, :fixed_version], 
+    }
+  }
+
+  named_scope :without_version, lambda {
+    {
+      :conditions => { :fixed_version_id => nil}
+    }
+  }
+
+  after_save :create_journal
   
   # Returns true if usr or current user is allowed to view the issue
   def visible?(usr=nil)
