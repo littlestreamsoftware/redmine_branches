@@ -345,7 +345,17 @@ module Redmine
             options[:image].fill('black')
             options[:image].text(i_left + 11, options[:top] + 1, version.name)
           when :pdf
-            # TODO: Version line
+            options[:pdf].SetY(options[:top]+1.5)
+            i_left = ((version.start_date - @date_from)*options[:zoom]) 
+            
+            options[:pdf].SetX(options[:subject_width] + i_left)
+            options[:pdf].SetFillColor(50,200,50)
+            options[:pdf].Cell(2, 2, "", 0, 0, "", 1) 
+        
+            options[:pdf].SetY(options[:top]+1.5)
+            options[:pdf].SetX(options[:subject_width] + i_left + 3)
+            options[:pdf].Cell(30, 2, "#{version.name}")
+
           end
         else
           ActiveRecord::Base.logger.warn "Gantt#line_for_version was not given a version with a start_date"
@@ -415,7 +425,11 @@ module Redmine
             l_width = i_late_date ? ((i_late_date - i_start_date+1)*options[:zoom]).floor - 2 : 0 # delay width
             css = "task " + (i.leaf? ? 'leaf' : 'parent')
             
-            output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ i_width }px;' class='#{css} task_todo'>&nbsp;</div>"
+            # Make sure that negative i_left and i_width don't
+            # overflow the subject
+            if i_width > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ i_width }px;' class='#{css} task_todo'>&nbsp;</div>"
+            end
             if l_width > 0
               output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ l_width }px;' class='#{css} task_late'>&nbsp;</div>"
             end
@@ -464,7 +478,59 @@ module Redmine
             options[:image].text(i_left + i_width + 5,options[:top] + 1, "#{issue.status.name} #{issue.done_ratio}%")
 
           when :pdf
-            # TODO
+            options[:pdf].SetY(options[:top]+1.5)
+            # Handle nil start_dates, rare but can happen.
+            i_start_date =  if issue.start_date && issue.start_date >= @date_from
+                          issue.start_date
+                        else
+                          @date_from
+                        end
+
+            i_end_date = (issue.due_before <= @date_to ? issue.due_before : @date_to )
+            
+            i_done_date = i_start_date + ((issue.due_before - i_start_date+1)*issue.done_ratio/100).floor
+            i_done_date = (i_done_date <= @date_from ? @date_from : i_done_date )
+            i_done_date = (i_done_date >= @date_to ? @date_to : i_done_date )
+            
+            i_late_date = [i_end_date, Date.today].min if i_start_date < Date.today
+            
+            i_left = ((i_start_date - @date_from)*options[:zoom]) 
+            i_width = ((i_end_date - i_start_date + 1)*options[:zoom])
+            d_width = ((i_done_date - i_start_date)*options[:zoom])
+            l_width = ((i_late_date - i_start_date+1)*options[:zoom]) if i_late_date
+            l_width ||= 0
+
+            # Make sure that negative i_left and i_width don't
+            # overflow the subject
+            if i_width > 0
+              options[:pdf].SetX(options[:subject_width] + i_left)
+              options[:pdf].SetFillColor(200,200,200)
+              options[:pdf].Cell(i_width, 2, "", 0, 0, "", 1)
+            end
+          
+            if l_width > 0
+              options[:pdf].SetY(options[:top]+1.5)
+              options[:pdf].SetX(options[:subject_width] + i_left)
+              options[:pdf].SetFillColor(255,100,100)
+              options[:pdf].Cell(l_width, 2, "", 0, 0, "", 1)
+            end 
+            if d_width > 0
+              options[:pdf].SetY(options[:top]+1.5)
+              options[:pdf].SetX(options[:subject_width] + i_left)
+              options[:pdf].SetFillColor(100,100,255)
+              options[:pdf].Cell(d_width, 2, "", 0, 0, "", 1)
+            end
+
+            options[:pdf].SetY(options[:top]+1.5)
+
+            # Make sure that negative i_left and i_width don't
+            # overflow the subject
+            if (i_left + i_width) >= 0
+              options[:pdf].SetX(options[:subject_width] + i_left + i_width)
+            else
+              options[:pdf].SetX(options[:subject_width])
+            end
+            options[:pdf].Cell(30, 2, "#{issue.status} #{issue.done_ratio}%")
           end
         else
           ActiveRecord::Base.logger.warn "GanttHelper#line_for_issue was not given an issue with a due_before"
@@ -705,12 +771,15 @@ module Redmine
       # Helper methods to draw the pdf.
       def pdf_tasks(pdf, options = {})
         subject_options = {:indent => 0, :indent_increment => 5, :top_increment => 3, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
+        line_options = {:indent => 0, :indent_increment => 5, :top_increment => 3, :render => :line, :format => :pdf, :pdf => pdf}.merge(options)
 
         if @project
           tasks_subjects_for_project(@project, subject_options)
+          tasks_subjects_for_project(@project, line_options)
         else
           Project.roots.each do |project|
             tasks_subjects_for_project(project, subject_options)
+            tasks_subjects_for_project(project, line_options)
           end
         end
       end
