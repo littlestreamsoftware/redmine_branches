@@ -33,6 +33,7 @@ class GanttsController < ApplicationController
 
       events += issues.reject {|i| versions.include?(i.fixed_version)}
       @gantt.events = events
+      @gantt.project = @project
       @gantt.query = @query
 
     end

@@ -1,3 +1,4 @@
+<% @gantt.view = self %>
 <h2><%= l(:label_gantt) %></h2>
 
 <% form_tag(params.merge(:month => nil, :year => nil, :months => nil), :id => 'query_form') do %>
@@ -56,7 +57,7 @@ end
 
 g_width = (@gantt.date_to - @gantt.date_from + 1)*zoom
 # Collect the number of issues on Versions
-g_height = [(20 * (number_of_rows + 6))+150, 206].max
+g_height = [(20 * (@gantt.number_of_rows + 6))+150, 206].max
 t_height = g_height + headers_height
 %>
 <table width="100%" style="border:0; border-collapse: collapse;">
@@ -71,7 +72,7 @@ t_height = g_height + headers_height
 # Tasks subjects
 #
 top = headers_height + 8 %>
-<%= tasks_subjects(:events => @gantt.events, :headers_height => headers_height, :top => top) %>
+<%= @gantt.tasks_subjects(:events => @gantt.events, :headers_height => headers_height, :top => top) %>
 </div>
 </td>
 <td>
@@ -154,7 +155,7 @@ end %>
 # Tasks
 #
 top = headers_height + 10 %>
-<%= tasks(:top => top, :zoom => zoom, :events => @gantt.events ) %>
+<%= @gantt.tasks(:top => top, :zoom => zoom, :events => @gantt.events ) %>
 
 <%
 #
