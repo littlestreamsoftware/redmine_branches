@@ -147,6 +147,8 @@ module Redmine
       end
 
       def tasks_subjects_for_project(project, options={})
+        options = {:indent_increment => 20}.merge(options)
+
         output = ''
         # Project Header
         project_header = if options[:render] == :subject
@@ -158,7 +160,7 @@ module Redmine
         output << project_header if options[:format] == :html
         
         options[:top] += 20
-        options[:indent] += 20
+        options[:indent] += options[:indent_increment]
         
         # Second, Issues without a version
         issues = project.issues.for_gantt.without_version.with_query(@query)
@@ -180,7 +182,7 @@ module Redmine
         end
 
         # Remove indent to hit the next sibling
-        options[:indent] -= 20 
+        options[:indent] -= options[:indent_increment]
         
         output
       end
@@ -221,7 +223,7 @@ module Redmine
         
         issues = version.fixed_issues.for_gantt.with_query(@query)
         if issues
-          output << tasks_subjects_for_issues(issues, options.merge({:indent => options[:indent] + 20}))
+          output << tasks_subjects_for_issues(issues, options.merge({:indent => options[:indent] + options[:indent_increment]}))
           options[:top] += (20 * issues.length) # Pad the top for each issue displayed
         end
 
@@ -706,7 +708,7 @@ module Redmine
 
       # Helper methods to draw the pdf.
       def pdf_tasks(pdf, options = {})
-        subject_options = {:indent => 4, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
+        subject_options = {:indent => 0, :indent_increment => 5, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
 
         if @project
           tasks_subjects_for_project(@project, subject_options)
