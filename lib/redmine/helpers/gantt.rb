@@ -20,6 +20,7 @@ module Redmine
     # Simple class to handle gantt chart data
     class Gantt
       include ERB::Util
+      include Redmine::I18n
 
       attr_reader :year_from, :month_from, :date_from, :date_to, :zoom, :months, :events
       attr_accessor :query
@@ -548,6 +549,118 @@ module Redmine
         imgl.to_blob
       end if Object.const_defined?(:Magick)
 
+      def to_pdf
+        pdf = ::Redmine::Export::PDF::IFPDF.new(current_language)
+        pdf.SetTitle("#{l(:label_gantt)} #{project}")
+        pdf.AliasNbPages
+        pdf.footer_date = format_date(Date.today)
+        pdf.AddPage("L")
+        pdf.SetFontStyle('B',12)
+        pdf.SetX(15)
+        pdf.Cell(70, 20, project.to_s)
+        pdf.Ln
+        pdf.SetFontStyle('B',9)
+        
+        subject_width = 70
+        header_heigth = 5
+        
+        headers_heigth = header_heigth
+        show_weeks = false
+        show_days = false
+        
+        if self.months < 7
+          show_weeks = true
+          headers_heigth = 2*header_heigth
+          if self.months < 3
+            show_days = true
+            headers_heigth = 3*header_heigth
+          end
+        end
+        
+        g_width = 210
+        zoom = (g_width) / (self.date_to - self.date_from + 1)
+        g_height = 120
+        t_height = g_height + headers_heigth
+        
+        y_start = pdf.GetY
+        
+        # Months headers
+        month_f = self.date_from
+        left = subject_width
+        height = header_heigth
+        self.months.times do 
+          width = ((month_f >> 1) - month_f) * zoom 
+          pdf.SetY(y_start)
+          pdf.SetX(left)
+          pdf.Cell(width, height, "#{month_f.year}-#{month_f.month}", "LTR", 0, "C")
+          left = left + width
+          month_f = month_f >> 1
+        end  
+        
+        # Weeks headers
+        if show_weeks
+          left = subject_width
+          height = header_heigth
+          if self.date_from.cwday == 1
+            # self.date_from is monday
+            week_f = self.date_from
+          else
+            # find next monday after self.date_from
+            week_f = self.date_from + (7 - self.date_from.cwday + 1)
+            width = (7 - self.date_from.cwday + 1) * zoom-1
+            pdf.SetY(y_start + header_heigth)
+            pdf.SetX(left)
+            pdf.Cell(width + 1, height, "", "LTR")
+            left = left + width+1
+          end
+          while week_f <= self.date_to
+            width = (week_f + 6 <= self.date_to) ? 7 * zoom : (self.date_to - week_f + 1) * zoom
+            pdf.SetY(y_start + header_heigth)
+            pdf.SetX(left)
+            pdf.Cell(width, height, (width >= 5 ? week_f.cweek.to_s : ""), "LTR", 0, "C")
+            left = left + width
+            week_f = week_f+7
+          end
+        end
+        
+        # Days headers
+        if show_days
+          left = subject_width
+          height = header_heigth
+          wday = self.date_from.cwday
+          pdf.SetFontStyle('B',7)
+          (self.date_to - self.date_from + 1).to_i.times do 
+            width = zoom
+            pdf.SetY(y_start + 2 * header_heigth)
+            pdf.SetX(left)
+            pdf.Cell(width, height, day_name(wday).first, "LTR", 0, "C")
+            left = left + width
+            wday = wday + 1
+            wday = 1 if wday > 7
+          end
+        end
+        
+        pdf.SetY(y_start)
+        pdf.SetX(15)
+        pdf.Cell(subject_width+g_width-15, headers_heigth, "", 1)
+        
+        # Tasks
+        top = headers_heigth + y_start
+        tasks(pdf, self, {
+                :top => top,
+                :zoom => zoom,
+                :events => self.events,
+                :subject_width => subject_width,
+                :g_width => g_width
+              })
+
+        
+        pdf.Line(15, top, subject_width+g_width, top)
+        pdf.Output
+
+        
+      end
+      
       private
 
       # Helper methods to draw the image.
