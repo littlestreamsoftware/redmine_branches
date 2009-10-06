@@ -131,7 +131,7 @@ module Redmine
       end
       
       def tasks_subjects(options={})
-        options = {:indent => 4, :render => :subject}.merge(options)
+        options = {:indent => 4, :render => :subject, :format => :html}.merge(options)
 
         output = ''
         if @project
@@ -148,12 +148,13 @@ module Redmine
       def tasks_subjects_for_project(project, options={})
         output = ''
         # Project Header
-        output << if options[:render] == :subject
-                    subject_for_project(project, options)
-                  else
-                    # :line
-                    line_for_project(project, options)
-                  end
+        project_header = if options[:render] == :subject
+                           subject_for_project(project, options)
+                         else
+                           # :line
+                           line_for_project(project, options)
+                         end
+        output << project_header if options[:format] == :html
         
         options[:top] += 20
         options[:indent] += 20
@@ -161,17 +162,20 @@ module Redmine
         # Second, Issues without a version
         issues = project.issues.for_gantt.without_version.with_query(@query)
         if issues
-          output << tasks_subjects_for_issues(issues, options)
+          issue_rendering = tasks_subjects_for_issues(issues, options)
+          output << issue_rendering if options[:format] == :html
         end
 
         # Third, Versions
         project.versions.each do |version|
-          output << tasks_subjects_for_version(version, options)
+          version_rendering = tasks_subjects_for_version(version, options)
+          output << version_rendering if options[:format] == :html
         end
 
         # Fourth, subprojects
         project.children.each do |project|
-          output << tasks_subjects_for_project(project, options)
+          subproject_rendering = tasks_subjects_for_project(project, options)
+          output << subproject_rendering if options[:format] == :html
         end
 
         # Remove indent to hit the next sibling
@@ -183,12 +187,13 @@ module Redmine
       def tasks_subjects_for_issues(issues, options={})
         output = ''
         issues.each do |i|
-          output << if options[:render] == :subject
-                      subject_for_issue(i, options)
-                    else
-                      # :line
-                      line_for_issue(i, options)
-                    end
+          issue_rendering = if options[:render] == :subject
+                              subject_for_issue(i, options)
+                            else
+                              # :line
+                              line_for_issue(i, options)
+                            end
+          output << issue_rendering if options[:format] == :html
           options[:top] += 20
         end
         output
@@ -197,12 +202,14 @@ module Redmine
       def tasks_subjects_for_version(version, options={})
         output = ''
         # Version header
-        output << if options[:render] == :subject
-                    subject_for_version(version, options)
-                  else
-                    # :line
-                    line_for_version(version, options)
-                  end
+        version_rendering = if options[:render] == :subject
+                              subject_for_version(version, options)
+                            else
+                              # :line
+                              line_for_version(version, options)
+                            end
+#        debugger if version_rendering.nil?
+        output << version_rendering if options[:format] == :html
         
         options[:top] += 20
 
@@ -221,7 +228,7 @@ module Redmine
       end
 
       def tasks(options)
-        options = {:indent => 4, :render => :line}.merge(options)
+        options = {:indent => 4, :render => :line, :format => :html}.merge(options)
         output = ''
 
         if @project
@@ -236,19 +243,29 @@ module Redmine
       end
 
       def subject_for_project(project, options)
-        output = ''
+        case options[:format]
+        when :html
+          output = ''
 
-        output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
-        if project.is_a? Project
-          output << '<span class="icon icon-projects">'
-          output << view.link_to_project(project)
-          output << '</span>'
-        else
-          ActiveRecord::Base.logger.warn "GanttHelper#tasks_subjects_for_project was not given a project"
+          output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+          if project.is_a? Project
+            output << '<span class="icon icon-projects">'
+            output << view.link_to_project(project)
+            output << '</span>'
+          else
+            ActiveRecord::Base.logger.warn "Gantt#subject_for_project was not given a project"
+            ''
+          end
+          output << "</small></div>"
+
+          output
+        when :image
+          
+          options[:image].fill('black')
+          options[:image].stroke('transparent')
+          options[:image].stroke_width(1)
+          options[:image].text(options[:indent], options[:top] + 2, project.name)
         end
-        output << "</small></div>"
-
-        output
       end
 
       def line_for_project(project, options)
@@ -257,100 +274,162 @@ module Redmine
       end
 
       def subject_for_version(version, options)
-        output = ''
-        output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
-        if version.is_a? Version
-          output << '<span class="icon icon-package">'
-          output << view.link_to_version(version)
-          output << '</span>'
-        else
-          ActiveRecord::Base.logger.warn "GanttHelper#tasks_subjects_for_version was not given a version"
-        end
-        output << "</small></div>"
+        case options[:format]
+        when :html
+          output = ''
+          output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+          if version.is_a? Version
+            output << '<span class="icon icon-package">'
+            output << view.link_to_version(version)
+            output << '</span>'
+          else
+            ActiveRecord::Base.logger.warn "Gantt#subject_for_version was not given a version"
+            ''
+          end
+          output << "</small></div>"
 
-        output
+          output
+        when :image
+          options[:image].fill('black')
+          options[:image].stroke('transparent')
+          options[:image].stroke_width(1)
+          options[:image].text(options[:indent], options[:top] + 2, version.name)
+        end
       end
 
       def line_for_version(version, options)
-        output = ''
         # Skip versions that don't have a start_date
         if version.is_a?(Version) && version.start_date
-          i_left = ((version.start_date - self.date_from)*options[:zoom]).floor
+          case options[:format]
+          when :html
+            output = ''
+            i_left = ((version.start_date - self.date_from)*options[:zoom]).floor
 
-          output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
-          output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
-          output << h("#{version.project} -") unless @project && @project == version.project
-          output << "<strong>#{h version }</strong>"
-          output << "</div>"
+            output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
+            output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
+            output << h("#{version.project} -") unless @project && @project == version.project
+            output << "<strong>#{h version }</strong>"
+            output << "</div>"
+            output
+          when :image
+            options[:image].stroke('transparent')
+            i_left = options[:subject_width] + ((version.start_date - @date_from)*zoom).floor
+            options[:image].fill('green')
+            options[:image].rectangle(i_left, options[:top], i_left + 6, options[:top] - 6)        
+            options[:image].fill('black')
+            options[:image].text(i_left + 11, options[:top] + 1, version.name)
+          end
+        else
+          ActiveRecord::Base.logger.warn "Gantt#line_for_version was not given a version with a start_date"
+          ''
         end
-
-        output
-
       end
 
       def subject_for_issue(issue, options)
-        output = ''
-        output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
-        if issue.is_a? Issue
-          output << '<span class="icon icon-issue">'
-          output << h("#{issue.project} -") unless @project && @project == issue.project
-          output << view.link_to_issue(issue)
-          output << ":"
-          output << h(issue.subject)
-          output << '</span>'
-        else
-          ActiveRecord::Base.logger.warn "GanttHelper#tasks_subjects_for_issues was not given an issue"
+        case options[:format]
+        when :html
+          output = ''
+          output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+          if issue.is_a? Issue
+            output << '<span class="icon icon-issue">'
+            output << h("#{issue.project} -") unless @project && @project == issue.project
+            output << view.link_to_issue(issue)
+            output << ":"
+            output << h(issue.subject)
+            output << '</span>'
+          else
+            ActiveRecord::Base.logger.warn "Gantt#subject_for_issue was not given an issue"
+            ''
+          end
+          output << "</small></div>"
+          output
+        when :image
+          options[:image].fill('black')
+          options[:image].stroke('transparent')
+          options[:image].stroke_width(1)
+          options[:image].text(options[:indent], options[:top] + 2, issue.subject)
         end
-        output << "</small></div>"
       end
 
       def line_for_issue(issue, options)
-        output = ''
         # Skip issues that don't have a due_before (due_date or version's due_date)
         if issue.is_a?(Issue) && issue.due_before
-          # Handle nil start_dates, rare but can happen.
-          i_start_date =  if issue.start_date && issue.start_date >= self.date_from
-                            issue.start_date
-                          else
-                            self.date_from
-                          end
+          case options[:format]
+          when :html
+            output = ''
+            # Handle nil start_dates, rare but can happen.
+            i_start_date =  if issue.start_date && issue.start_date >= self.date_from
+                              issue.start_date
+                            else
+                              self.date_from
+                            end
 
-          i_end_date = ((issue.due_before && issue.due_before <= self.date_to) ? issue.due_before : self.date_to )
-          i_done_date = i_start_date + ((issue.due_before - i_start_date+1)*issue.done_ratio/100).floor
-          i_done_date = (i_done_date <= self.date_from ? self.date_from : i_done_date )
-          i_done_date = (i_done_date >= self.date_to ? self.date_to : i_done_date )
-          
-          i_late_date = [i_end_date, Date.today].min if i_start_date < Date.today
-          
-          i_left = ((i_start_date - self.date_from)*options[:zoom]).floor 	
-          i_width = ((i_end_date - i_start_date + 1)*options[:zoom]).floor - 2                  # total width of the issue (- 2 for left and right borders)
-          d_width = ((i_done_date - i_start_date)*options[:zoom]).floor - 2                     # done width
-          l_width = i_late_date ? ((i_late_date - i_start_date+1)*options[:zoom]).floor - 2 : 0 # delay width
-          css = "task " + (i.leaf? ? 'leaf' : 'parent')
-          
-          output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ i_width }px;' class='#{css} task_todo'>&nbsp;</div>"
-          if l_width > 0
-            output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ l_width }px;' class='#{css} task_late'>&nbsp;</div>"
-          end
-          if d_width > 0
-            output<< "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ d_width }px;' class='#{css} task task_done'>&nbsp;</div>"
-          end
-          output << "<div style='top:#{ options[:top] }px;left:#{ i_left + i_width + 5 }px;background:#fff;' class='#{css}'>"
-          output << issue.status.name
-          output << ' '
-          output << (issue.done_ratio).to_i.to_s
-          output << "%"
-          output << "</div>"
+            i_end_date = ((issue.due_before && issue.due_before <= self.date_to) ? issue.due_before : self.date_to )
+            i_done_date = i_start_date + ((issue.due_before - i_start_date+1)*issue.done_ratio/100).floor
+            i_done_date = (i_done_date <= self.date_from ? self.date_from : i_done_date )
+            i_done_date = (i_done_date >= self.date_to ? self.date_to : i_done_date )
+            
+            i_late_date = [i_end_date, Date.today].min if i_start_date < Date.today
+            
+            i_left = ((i_start_date - self.date_from)*options[:zoom]).floor 	
+            i_width = ((i_end_date - i_start_date + 1)*options[:zoom]).floor - 2                  # total width of the issue (- 2 for left and right borders)
+            d_width = ((i_done_date - i_start_date)*options[:zoom]).floor - 2                     # done width
+            l_width = i_late_date ? ((i_late_date - i_start_date+1)*options[:zoom]).floor - 2 : 0 # delay width
+            css = "task " + (i.leaf? ? 'leaf' : 'parent')
+            
+            output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ i_width }px;' class='#{css} task_todo'>&nbsp;</div>"
+            if l_width > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ l_width }px;' class='#{css} task_late'>&nbsp;</div>"
+            end
+            if d_width > 0
+              output<< "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ d_width }px;' class='#{css} task_done'>&nbsp;</div>"
+            end
+            output << "<div style='top:#{ options[:top] }px;left:#{ i_left + i_width + 5 }px;background:#fff;' class='#{css}'>"
+            output << issue.status.name
+            output << ' '
+            output << (issue.done_ratio).to_i.to_s
+            output << "%"
+            output << "</div>"
 
-          output << "<div class='tooltip' style='position: absolute;top:#{ options[:top] }px;left:#{ i_left }px;width:#{ i_width }px;height:12px;'>"
-          output << '<span class="tip">'
-          output << view.render_issue_tooltip(issue)
-          output << "</span></div>"
+            output << "<div class='tooltip' style='position: absolute;top:#{ options[:top] }px;left:#{ i_left }px;width:#{ i_width }px;height:12px;'>"
+            output << '<span class="tip">'
+            output << view.render_issue_tooltip(issue)
+            output << "</span></div>"
+            output
+          
+          when :image
+            # Handle nil start_dates, rare but can happen.
+            i_start_date =  if issue.start_date && issue.start_date >= @date_from
+                              issue.start_date
+                            else
+                              @date_from
+                            end
+
+            i_end_date = (issue.due_before <= date_to ? issue.due_before : date_to )        
+            i_done_date = i_start_date + ((issue.due_before - i_start_date+1)*issue.done_ratio/100).floor
+            i_done_date = (i_done_date <= @date_from ? @date_from : i_done_date )
+            i_done_date = (i_done_date >= date_to ? date_to : i_done_date )        
+            i_late_date = [i_end_date, Date.today].min if i_start_date < Date.today
+            
+            i_left = options[:subject_width] + ((i_start_date - @date_from)*zoom).floor 	
+            i_width = ((i_end_date - i_start_date + 1)*zoom).floor                  # total width of the issue
+            d_width = ((i_done_date - i_start_date)*zoom).floor                     # done width
+            l_width = i_late_date ? ((i_late_date - i_start_date+1)*zoom).floor : 0 # delay width
+            
+            options[:image].fill('grey')
+            options[:image].rectangle(i_left, options[:top], i_left + i_width, options[:top] - 6)
+            options[:image].fill('red')
+            options[:image].rectangle(i_left, options[:top], i_left + l_width, options[:top] - 6) if l_width > 0
+            options[:image].fill('blue')
+            options[:image].rectangle(i_left, options[:top], i_left + d_width, options[:top] - 6) if d_width > 0
+            options[:image].fill('black')
+            options[:image].text(i_left + i_width + 5,options[:top] + 1, "#{issue.status.name} #{issue.done_ratio}%")
+
+          end
         else
-          ActiveRecord::Base.logger.warn "GanttHelper#line_for_issue was not given an issue"
+          ActiveRecord::Base.logger.warn "GanttHelper#line_for_issue was not given an issue with a due_before"
+          ''
         end
-
-        output
       end
 
       # END HTML
@@ -472,32 +551,33 @@ module Redmine
       private
 
       # Helper methods to draw the image.
-      # TODO: similar to the GanttHelper
       def image_subjects(gc, options = {})
-        events = options.delete(:events)
-        top = options.delete(:top)
-        indent = options.delete(:indent) || 4
+        options = {:indent => 4, :render => :subject, :format => :image, :image => gc}.merge(options)
 
-        gc.fill('black')
-        gc.stroke('transparent')
-        gc.stroke_width(1)
-        events.each do |i|
-          gc.text(indent, top + 2, (i.is_a?(Issue) ? i.subject : i.name))
-          top = top + 20
-          if i.is_a? Version
-            issues = i.fixed_issues.for_gantt.with_query(query)
-            image_subjects(gc, :top => top, :events => issues, :indent => indent + 30)
-            top = top + (20 * issues.length) # Pad the top for each issue displayed
+        if @project
+          tasks_subjects_for_project(@project, options)
+        else
+          Project.roots.each do |project|
+            tasks_subjects_for_project(project, options)
           end
         end
       end
 
       def image_tasks(gc, options = {})
-        top = options.delete(:top)
-        zoom = options.delete(:zoom)
-        events = options.delete(:events)
-        subject_width = options.delete(:subject_width)
+        options = {:indent => 4, :render => :line, :format => :image, :image => gc}.merge(options)
 
+        if @project
+          tasks_subjects_for_project(@project, options)
+        else
+          Project.roots.each do |project|
+            tasks_subjects_for_project(project, options)
+          end
+        end
+        
+      end
+
+
+      def stuff  
         gc.stroke('transparent')
         events.each do |i|      
           if i.is_a?(Issue)       
