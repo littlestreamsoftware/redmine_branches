@@ -55,6 +55,7 @@ if @gantt.zoom >1
     end
 end
 
+# Width of the entire chart    
 g_width = (@gantt.date_to - @gantt.date_from + 1)*zoom
 # Collect the number of issues on Versions
 g_height = [(20 * (@gantt.number_of_rows + 6))+150, 206].max
@@ -72,7 +73,7 @@ t_height = g_height + headers_height
 # Tasks subjects
 #
 top = headers_height + 8 %>
-<%= @gantt.tasks_subjects(:events => @gantt.events, :headers_height => headers_height, :top => top) %>
+<%= @gantt.tasks_subjects(:events => @gantt.events, :headers_height => headers_height, :top => top, :g_width => g_width) %>
 </div>
 </td>
 <td>
@@ -155,7 +156,7 @@ end %>
 # Tasks
 #
 top = headers_height + 10 %>
-<%= @gantt.tasks(:top => top, :zoom => zoom, :events => @gantt.events ) %>
+<%= @gantt.tasks(:top => top, :zoom => zoom, :events => @gantt.events, :g_width => g_width ) %>
 
 <%
 #

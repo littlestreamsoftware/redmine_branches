@@ -331,31 +331,40 @@ module Redmine
             output = ''
             i_left = ((version.start_date - self.date_from)*options[:zoom]).floor
 
-            output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
-            output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
-            output << h("#{version.project} -") unless @project && @project == version.project
-            output << "<strong>#{h version }</strong>"
-            output << "</div>"
+            # Don't show items too far ahead
+            if i_left <= options[:g_width]
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
+              output << h("#{version.project} -") unless @project && @project == version.project
+              output << "<strong>#{h version }</strong>"
+              output << "</div>"
+              end
             output
           when :image
             options[:image].stroke('transparent')
             i_left = options[:subject_width] + ((version.start_date - @date_from)*options[:zoom]).floor
-            options[:image].fill('green')
-            options[:image].rectangle(i_left, options[:top], i_left + 6, options[:top] - 6)        
-            options[:image].fill('black')
-            options[:image].text(i_left + 11, options[:top] + 1, version.name)
+
+            # Make sure negative i_left doesn't overflow the subject
+            if i_left > options[:subject_width]
+              options[:image].fill('green')
+              options[:image].rectangle(i_left, options[:top], i_left + 6, options[:top] - 6)        
+              options[:image].fill('black')
+              options[:image].text(i_left + 11, options[:top] + 1, version.name)
+            end
           when :pdf
             options[:pdf].SetY(options[:top]+1.5)
             i_left = ((version.start_date - @date_from)*options[:zoom]) 
-            
-            options[:pdf].SetX(options[:subject_width] + i_left)
-            options[:pdf].SetFillColor(50,200,50)
-            options[:pdf].Cell(2, 2, "", 0, 0, "", 1) 
-        
-            options[:pdf].SetY(options[:top]+1.5)
-            options[:pdf].SetX(options[:subject_width] + i_left + 3)
-            options[:pdf].Cell(30, 2, "#{version.name}")
 
+            # Make sure negative i_left doesn't overflow the subject
+            if i_left > 0
+              options[:pdf].SetX(options[:subject_width] + i_left)
+              options[:pdf].SetFillColor(50,200,50)
+              options[:pdf].Cell(2, 2, "", 0, 0, "", 1) 
+        
+              options[:pdf].SetY(options[:top]+1.5)
+              options[:pdf].SetX(options[:subject_width] + i_left + 3)
+              options[:pdf].Cell(30, 2, "#{version.name}")
+            end
           end
         else
           ActiveRecord::Base.logger.warn "Gantt#line_for_version was not given a version with a start_date"
@@ -467,15 +476,26 @@ module Redmine
             i_width = ((i_end_date - i_start_date + 1)*options[:zoom]).floor                  # total width of the issue
             d_width = ((i_done_date - i_start_date)*options[:zoom]).floor                     # done width
             l_width = i_late_date ? ((i_late_date - i_start_date+1)*options[:zoom]).floor : 0 # delay width
+
             
-            options[:image].fill('grey')
-            options[:image].rectangle(i_left, options[:top], i_left + i_width, options[:top] - 6)
-            options[:image].fill('red')
-            options[:image].rectangle(i_left, options[:top], i_left + l_width, options[:top] - 6) if l_width > 0
-            options[:image].fill('blue')
-            options[:image].rectangle(i_left, options[:top], i_left + d_width, options[:top] - 6) if d_width > 0
+            # Make sure that negative i_left and i_width don't
+            # overflow the subject
+            if i_width > 0
+              options[:image].fill('grey')
+              options[:image].rectangle(i_left, options[:top], i_left + i_width, options[:top] - 6)
+              options[:image].fill('red')
+              options[:image].rectangle(i_left, options[:top], i_left + l_width, options[:top] - 6) if l_width > 0
+              options[:image].fill('blue')
+              options[:image].rectangle(i_left, options[:top], i_left + d_width, options[:top] - 6) if d_width > 0
+            end
+
+            # Show the status and % done next to the subject if it overflows
             options[:image].fill('black')
-            options[:image].text(i_left + i_width + 5,options[:top] + 1, "#{issue.status.name} #{issue.done_ratio}%")
+            if i_width > 0
+              options[:image].text(i_left + i_width + 5,options[:top] + 1, "#{issue.status.name} #{issue.done_ratio}%")
+            else
+              options[:image].text(options[:subject_width] + 5,options[:top] + 1, "#{issue.status.name} #{issue.done_ratio}%")            
+            end
 
           when :pdf
             options[:pdf].SetY(options[:top]+1.5)
