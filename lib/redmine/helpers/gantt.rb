@@ -147,7 +147,10 @@ module Redmine
       end
 
       def tasks_subjects_for_project(project, options={})
-        options = {:indent_increment => 20}.merge(options)
+        options = {
+          :indent_increment => 20,
+          :top_increment => 20
+        }.merge(options)
 
         output = ''
         # Project Header
@@ -159,7 +162,7 @@ module Redmine
                          end
         output << project_header if options[:format] == :html
         
-        options[:top] += 20
+        options[:top] += options[:top_increment]
         options[:indent] += options[:indent_increment]
         
         # Second, Issues without a version
@@ -197,7 +200,7 @@ module Redmine
                               line_for_issue(i, options)
                             end
           output << issue_rendering if options[:format] == :html
-          options[:top] += 20
+          options[:top] += options[:top_increment]
         end
         output
       end
@@ -211,10 +214,10 @@ module Redmine
                               # :line
                               line_for_version(version, options)
                             end
-#        debugger if version_rendering.nil?
+
         output << version_rendering if options[:format] == :html
         
-        options[:top] += 20
+        options[:top] += options[:top_increment]
 
         # Remove the project requirement for Versions because it will
         # restrict issues to only be on the current project.  This
@@ -224,7 +227,7 @@ module Redmine
         issues = version.fixed_issues.for_gantt.with_query(@query)
         if issues
           output << tasks_subjects_for_issues(issues, options.merge({:indent => options[:indent] + options[:indent_increment]}))
-          options[:top] += (20 * issues.length) # Pad the top for each issue displayed
+          options[:top] += (options[:top_increment] * issues.length) # Pad the top for each issue displayed
         end
 
         output
@@ -278,8 +281,6 @@ module Redmine
           options[:pdf].SetY(options[:top])
           options[:pdf].SetX(options[:subject_width])
           options[:pdf].Cell(options[:g_width], 5, "", "LR")
-        
-          options[:pdf].SetY(options[:top]+1.5)
         end
       end
 
@@ -319,8 +320,6 @@ module Redmine
           options[:pdf].SetY(options[:top])
           options[:pdf].SetX(options[:subject_width])
           options[:pdf].Cell(options[:g_width], 5, "", "LR")
-        
-          options[:pdf].SetY(options[:top]+1.5)
         end
       end
 
@@ -387,9 +386,6 @@ module Redmine
           options[:pdf].SetY(options[:top])
           options[:pdf].SetX(options[:subject_width])
           options[:pdf].Cell(options[:g_width], 5, "", "LR")
-        
-          options[:pdf].SetY(options[:top]+1.5)
-          
         end
       end
 
@@ -708,7 +704,7 @@ module Redmine
 
       # Helper methods to draw the pdf.
       def pdf_tasks(pdf, options = {})
-        subject_options = {:indent => 0, :indent_increment => 5, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
+        subject_options = {:indent => 0, :indent_increment => 5, :top_increment => 3, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
 
         if @project
           tasks_subjects_for_project(@project, subject_options)
