@@ -313,7 +313,7 @@ module Redmine
             output
           when :image
             options[:image].stroke('transparent')
-            i_left = options[:subject_width] + ((version.start_date - @date_from)*zoom).floor
+            i_left = options[:subject_width] + ((version.start_date - @date_from)*options[:zoom]).floor
             options[:image].fill('green')
             options[:image].rectangle(i_left, options[:top], i_left + 6, options[:top] - 6)        
             options[:image].fill('black')
@@ -411,10 +411,10 @@ module Redmine
             i_done_date = (i_done_date >= date_to ? date_to : i_done_date )        
             i_late_date = [i_end_date, Date.today].min if i_start_date < Date.today
             
-            i_left = options[:subject_width] + ((i_start_date - @date_from)*zoom).floor 	
-            i_width = ((i_end_date - i_start_date + 1)*zoom).floor                  # total width of the issue
-            d_width = ((i_done_date - i_start_date)*zoom).floor                     # done width
-            l_width = i_late_date ? ((i_late_date - i_start_date+1)*zoom).floor : 0 # delay width
+            i_left = options[:subject_width] + ((i_start_date - @date_from)*options[:zoom]).floor 	
+            i_width = ((i_end_date - i_start_date + 1)*options[:zoom]).floor                  # total width of the issue
+            d_width = ((i_done_date - i_start_date)*options[:zoom]).floor                     # done width
+            l_width = i_late_date ? ((i_late_date - i_start_date+1)*options[:zoom]).floor : 0 # delay width
             
             options[:image].fill('grey')
             options[:image].rectangle(i_left, options[:top], i_left + i_width, options[:top] - 6)
