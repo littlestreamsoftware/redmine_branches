@@ -447,7 +447,7 @@ module Redmine
         # width of one day in pixels
         zoom = @zoom*2
         g_width = (@date_to - @date_from + 1)*zoom
-        g_height = 20 * (events.length + number_of_issues_on_versions) + 20
+        g_height = 20 * number_of_rows + 30
         headers_heigth = (show_weeks ? 2*header_heigth : header_heigth)
         height = g_height + headers_heigth
             
