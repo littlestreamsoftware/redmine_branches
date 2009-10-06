@@ -121,10 +121,8 @@ module Redmine
       end
 
       def tasks_subjects_for_project(project, options={})
-        options = {
-          :indent_increment => 20,
-          :top_increment => 20
-        }.merge(options)
+        options[:indent_increment] = 20 unless options.key? :indent_increment
+        options[:top_increment] = 20 unless options.key? :top_increment
 
         output = ''
         # Project Header
@@ -200,8 +198,10 @@ module Redmine
         
         issues = version.fixed_issues.for_gantt.with_query(@query)
         if issues
-          output << tasks_subjects_for_issues(issues, options.merge({:indent => options[:indent] + options[:indent_increment]}))
-          options[:top] += (options[:top_increment] * issues.length) # Pad the top for each issue displayed
+          # Indent issues
+          options[:indent] += options[:indent_increment]
+          output << tasks_subjects_for_issues(issues, options)
+          options[:indent] -= options[:indent_increment]
         end
 
         output
