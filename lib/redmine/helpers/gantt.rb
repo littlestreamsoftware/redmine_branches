@@ -22,14 +22,13 @@ module Redmine
       include ERB::Util
       include Redmine::I18n
 
-      attr_reader :year_from, :month_from, :date_from, :date_to, :zoom, :months, :events
+      attr_reader :year_from, :month_from, :date_from, :date_to, :zoom, :months
       attr_accessor :query
       attr_accessor :project
       attr_accessor :view
       
       def initialize(options={})
         options = options.dup
-        @events = []
         
         if options[:year] && options[:year].to_i >0
           @year_from = options[:year].to_i
@@ -56,31 +55,6 @@ module Redmine
         
         @date_from = Date.civil(@year_from, @month_from, 1)
         @date_to = (@date_from >> @months) - 1
-      end
-      
-      
-      def events=(e)
-        @events = e
-        # Adds all ancestors
-        root_ids = e.select {|i| i.is_a?(Issue) && i.parent_id? }.collect(&:root_id).uniq
-        if root_ids.any?
-          # Retrieves all nodes
-          parents = Issue.find_all_by_root_id(root_ids, :conditions => ["rgt - lft > 1"])
-          # Only add ancestors
-          @events += parents.select {|p| @events.detect {|i| i.is_a?(Issue) && p.is_ancestor_of?(i)}}
-        end
-        @events.uniq!
-        # Sort issues by hierarchy and start dates
-        @events.sort! {|x,y| 
-          if x.is_a?(Issue) && y.is_a?(Issue)
-            gantt_issue_compare(x, y, @events)
-          else
-            gantt_start_compare(x, y)
-          end
-        }
-        # Removes issues that have no start or end date
-        @events.reject! {|i| i.is_a?(Issue) && (i.start_date.nil? || i.due_before.nil?) }
-        @events
       end
       
       def params
@@ -582,7 +556,7 @@ module Redmine
         gc = Magick::Draw.new
         
         # Subjects
-        image_subjects(gc, :top => (headers_heigth + 20), :events => events, :indent => 0)
+        image_subjects(gc, :top => (headers_heigth + 20), :indent => 0)
     
         # Months headers
         month_f = @date_from
@@ -660,7 +634,7 @@ module Redmine
             
         # content
         top = headers_heigth + 20
-        image_tasks(gc, :top => top, :zoom => zoom, :events => events, :subject_width => subject_width)
+        image_tasks(gc, :top => top, :zoom => zoom, :subject_width => subject_width)
         
         # today red line
         if Date.today >= @date_from and Date.today <= date_to
@@ -774,7 +748,6 @@ module Redmine
         pdf_tasks(pdf, {
                 :top => top,
                 :zoom => zoom,
-                :events => self.events,
                 :subject_width => subject_width,
                 :g_width => g_width
               })
