@@ -266,6 +266,18 @@ module Redmine
           options[:image].stroke('transparent')
           options[:image].stroke_width(1)
           options[:image].text(options[:indent], options[:top] + 2, project.name)
+        when :pdf
+          options[:pdf].SetY(options[:top])
+          options[:pdf].SetX(15)
+          
+          char_limit = 30 - options[:indent]
+          options[:pdf].Cell(options[:subject_width]-15, 5, (" " * options[:indent]) +"#{project.name}".sub(/^(.{#{char_limit}}[^\s]*\s).*$/, '\1 (...)'), "LR")
+        
+          options[:pdf].SetY(options[:top])
+          options[:pdf].SetX(options[:subject_width])
+          options[:pdf].Cell(options[:g_width], 5, "", "LR")
+        
+          options[:pdf].SetY(options[:top]+1.5)
         end
       end
 
@@ -295,6 +307,18 @@ module Redmine
           options[:image].stroke('transparent')
           options[:image].stroke_width(1)
           options[:image].text(options[:indent], options[:top] + 2, version.name)
+        when :pdf
+          options[:pdf].SetY(options[:top])
+          options[:pdf].SetX(15)
+          
+          char_limit = 30 - options[:indent]
+          options[:pdf].Cell(options[:subject_width]-15, 5, (" " * options[:indent]) +"#{version.name}".sub(/^(.{#{char_limit}}[^\s]*\s).*$/, '\1 (...)'), "LR")
+        
+          options[:pdf].SetY(options[:top])
+          options[:pdf].SetX(options[:subject_width])
+          options[:pdf].Cell(options[:g_width], 5, "", "LR")
+        
+          options[:pdf].SetY(options[:top]+1.5)
         end
       end
 
@@ -319,6 +343,8 @@ module Redmine
             options[:image].rectangle(i_left, options[:top], i_left + 6, options[:top] - 6)        
             options[:image].fill('black')
             options[:image].text(i_left + 11, options[:top] + 1, version.name)
+          when :pdf
+            # TODO: Version line
           end
         else
           ActiveRecord::Base.logger.warn "Gantt#line_for_version was not given a version with a start_date"
@@ -349,6 +375,19 @@ module Redmine
           options[:image].stroke('transparent')
           options[:image].stroke_width(1)
           options[:image].text(options[:indent], options[:top] + 2, issue.subject)
+        when :pdf
+          options[:pdf].SetY(options[:top])
+          options[:pdf].SetX(15)
+          
+          char_limit = 30 - options[:indent]
+          options[:pdf].Cell(options[:subject_width]-15, 5, (" " * options[:indent]) +"#{issue.tracker} #{issue.id}: #{issue.subject}".sub(/^(.{#{char_limit}}[^\s]*\s).*$/, '\1 (...)'), "LR")
+        
+          options[:pdf].SetY(options[:top])
+          options[:pdf].SetX(options[:subject_width])
+          options[:pdf].Cell(options[:g_width], 5, "", "LR")
+        
+          options[:pdf].SetY(options[:top]+1.5)
+          
         end
       end
 
@@ -426,6 +465,8 @@ module Redmine
             options[:image].fill('black')
             options[:image].text(i_left + i_width + 5,options[:top] + 1, "#{issue.status.name} #{issue.done_ratio}%")
 
+          when :pdf
+            # TODO
           end
         else
           ActiveRecord::Base.logger.warn "GanttHelper#line_for_issue was not given an issue with a due_before"
@@ -646,7 +687,7 @@ module Redmine
         
         # Tasks
         top = headers_heigth + y_start
-        tasks(pdf, self, {
+        pdf_tasks(pdf, {
                 :top => top,
                 :zoom => zoom,
                 :events => self.events,
@@ -662,6 +703,32 @@ module Redmine
       end
       
       private
+
+      # Helper methods to draw the pdf.
+      def pdf_tasks(pdf, options = {})
+        subject_options = {:indent => 4, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
+
+        if @project
+          tasks_subjects_for_project(@project, subject_options)
+        else
+          Project.roots.each do |project|
+            tasks_subjects_for_project(project, subject_options)
+          end
+        end
+      end
+
+      def image_tasks(gc, options = {})
+        options = {:indent => 4, :render => :line, :format => :image, :image => gc}.merge(options)
+
+        if @project
+          tasks_subjects_for_project(@project, options)
+        else
+          Project.roots.each do |project|
+            tasks_subjects_for_project(project, options)
+          end
+        end
+        
+      end
 
       # Helper methods to draw the image.
       def image_subjects(gc, options = {})
