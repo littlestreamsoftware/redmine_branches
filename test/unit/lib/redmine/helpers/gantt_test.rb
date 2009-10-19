@@ -32,12 +32,60 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   end
 
   context "#number_of_rows_on_project" do
-    should "clear the @query.project so cross-project issues and versions can be counted"
-    should "count 1 for the project itself"
-    should "count the number of issues without a version"
-    should "count the number of versions"
-    should "count the number of issues on versions, including cross-project"
-    should "recursive and count the number of rows on each subproject"
+    setup do
+      # Fixtures
+      ProjectCustomField.delete_all
+      Project.destroy_all
+      
+      @project = Project.generate!
+      @gantt = Redmine::Helpers::Gantt.new
+      @gantt.project = @project
+      @gantt.query = Query.generate_default!(:project => @project)
+    end
+    
+    should "clear the @query.project so cross-project issues and versions can be counted" do
+      assert @gantt.query.project
+      @gantt.number_of_rows_on_project(@project)
+      assert_nil @gantt.query.project
+    end
+
+    should "count 1 for the project itself" do
+      assert_equal 1, @gantt.number_of_rows_on_project(@project)
+    end
+
+    should "count the number of issues without a version" do
+      @project.issues << Issue.generate_for_project!(@project, :fixed_version => nil)
+      assert_equal 2, @gantt.number_of_rows_on_project(@project)
+    end
+
+    should "count the number of versions" do
+      @project.versions << Version.generate!
+      @project.versions << Version.generate!
+      assert_equal 3, @gantt.number_of_rows_on_project(@project)
+    end
+
+    should "count the number of issues on versions, including cross-project" do
+      version = Version.generate!
+      @project.versions << version
+      @project.issues << Issue.generate_for_project!(@project, :fixed_version => version)
+      
+      assert_equal 3, @gantt.number_of_rows_on_project(@project)
+    end
+    
+    should "recursive and count the number of rows on each subproject" do
+      @project.versions << Version.generate! # +1
+
+      @subproject = Project.generate!(:enabled_module_names => ['issue_tracking']) # +1
+      @subproject.set_parent!(@project)
+      @subproject.issues << Issue.generate_for_project!(@subproject) # +1
+      @subproject.issues << Issue.generate_for_project!(@subproject) # +1
+
+      @subsubproject = Project.generate!(:enabled_module_names => ['issue_tracking']) # +1
+      @subsubproject.set_parent!(@subproject)
+      @subsubproject.issues << Issue.generate_for_project!(@subsubproject) # +1
+
+      assert_equal 7, @gantt.number_of_rows_on_project(@project) # +1 for self
+    end
   end
 
   context "#tasks_subjects" do
