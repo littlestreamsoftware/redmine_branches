@@ -84,6 +84,11 @@ module Redmine
       # Returns the number of rows that will be used to list a project on
       # the Gantt chart.  This will recurse for each subproject.
       def number_of_rows_on_project(project)
+        # Remove the project requirement for Versions because it will
+        # restrict issues to only be on the current project.  This
+        # ends up missing issues which are assigned to shared versions.
+        @query.project = nil if @query.project
+
         # One Root project
         count = 1
         # Issues without a Version
