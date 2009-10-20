@@ -136,6 +136,7 @@ class GroupsController < ApplicationController
     render :layout => false
   end
   
+  # TODO: Refactor, similar to UsersController#edit_membership
   def edit_membership
     @group = Group.find(params[:id])
     @membership = Member.edit_membership(params[:membership_id], params[:membership], @group)
@@ -151,6 +152,7 @@ class GroupsController < ApplicationController
      end
   end
   
+  # TODO: Refactor, similar to UsersController#destroy_membership
   def destroy_membership
     @group = Group.find(params[:id])
     Member.find(params[:membership_id]).destroy if request.post?

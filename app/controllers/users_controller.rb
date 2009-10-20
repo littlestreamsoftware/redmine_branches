@@ -117,7 +117,8 @@ class UsersController < ApplicationController
   rescue ::ActionController::RedirectBackError
     redirect_to :controller => 'users', :action => 'edit', :id => @user
   end
-  
+
+  # TODO: Refactor, similar to GroupsController#edit_membership
   def edit_membership
     @user = User.find(params[:id])
     @membership = Member.edit_membership(params[:membership_id], params[:membership], @user)
@@ -133,6 +134,7 @@ class UsersController < ApplicationController
      end
   end
   
+  # TODO: Refactor, similar to GroupsController#destroy_membership
   def destroy_membership
     @user = User.find(params[:id])
     @membership = Member.find(params[:membership_id])
