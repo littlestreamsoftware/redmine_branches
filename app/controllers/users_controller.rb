@@ -121,8 +121,17 @@ class UsersController < ApplicationController
   # TODO: Refactor, similar to GroupsController#edit_membership
   def edit_membership
     @user = User.find(params[:id])
-    @membership = Member.edit_membership(params[:membership_id], params[:membership], @user)
-    @membership.save if request.post?
+
+    if params[:project_ids] # Multiple memberships, one per project
+      params[:project_ids].each do |project_id|
+        @membership = Member.edit_membership(params[:membership_id], params[:membership].merge(:project_id => project_id), @user)
+        @membership.save if request.post?
+      end
+    else # Single membership
+      @membership = Member.edit_membership(params[:membership_id], params[:membership], @user)
+      @membership.save if request.post?
+    end
+
     respond_to do |format|
        format.html { redirect_to :controller => 'users', :action => 'edit', :id => @user, :tab => 'memberships' }
        format.js { 

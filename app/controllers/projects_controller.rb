@@ -22,11 +22,11 @@ class ProjectsController < ApplicationController
   menu_item :files, :only => [:list_files, :add_file]
   menu_item :settings, :only => :settings
   
-  before_filter :find_project, :except => [ :index, :list, :add, :copy, :activity ]
+  before_filter :find_project, :except => [ :index, :list, :add, :copy, :activity, :autocomplete_for_project ]
   before_filter :find_optional_project, :only => :activity
-  before_filter :authorize, :except => [ :index, :list, :add, :copy, :archive, :unarchive, :destroy, :activity ]
+  before_filter :authorize, :except => [ :index, :list, :add, :copy, :archive, :unarchive, :destroy, :activity, :autocomplete_for_project ]
   before_filter :authorize_global, :only => :add
-  before_filter :require_admin, :only => [ :copy, :archive, :unarchive, :destroy ]
+  before_filter :require_admin, :only => [ :copy, :archive, :unarchive, :destroy, :autocomplete_for_project ]
   accept_key_auth :activity
   
   after_filter :only => [:add, :edit, :archive, :unarchive, :destroy] do |controller|
@@ -353,6 +353,12 @@ class ProjectsController < ApplicationController
     
   rescue ActiveRecord::RecordNotFound
     render_404
+  end
+
+  def autocomplete_for_project
+    @principal = Principal.find(params[:id])
+    @projects = Project.active.like(params[:q]).find(:all, :limit => 100) - @principal.projects
+    render :layout => false
   end
   
 private

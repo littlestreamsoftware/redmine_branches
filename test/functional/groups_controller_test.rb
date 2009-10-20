@@ -92,7 +92,13 @@ class GroupsControllerTest < ActionController::TestCase
       post :edit_membership, :id => 10, :membership => { :project_id => 2, :role_ids => ['1', '2']}
     end
   end
-  
+
+  def test_new_membership_with_multiple_projects
+    assert_difference 'Group.find(10).members.count', 3 do
+      post :edit_membership, :id => 10, :project_ids => [1,2,3], :membership => { :role_ids => ['1', '2']}
+    end
+  end
+
   def test_edit_membership
     assert_no_difference 'Group.find(10).members.count' do
       post :edit_membership, :id => 10, :membership_id => 6, :membership => { :role_ids => ['1', '3']}
