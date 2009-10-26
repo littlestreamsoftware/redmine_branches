@@ -22,6 +22,18 @@ module Redmine
       include ERB::Util
       include Redmine::I18n
 
+      # :nodoc:
+      # Some utility methods for the PDF export
+      class PDF
+        MaxCharactorsForSubject = 45
+        TotalWidth = 280
+        LeftPaneWidth = 100
+
+        def self.right_pane_width
+          TotalWidth - LeftPaneWidth
+        end
+      end
+
       attr_reader :year_from, :month_from, :date_from, :date_to, :zoom, :months
       attr_accessor :query
       attr_accessor :project
@@ -254,7 +266,7 @@ module Redmine
           options[:pdf].SetY(options[:top])
           options[:pdf].SetX(15)
           
-          char_limit = 30 - options[:indent]
+          char_limit = PDF::MaxCharactorsForSubject - options[:indent]
           options[:pdf].Cell(options[:subject_width]-15, 5, (" " * options[:indent]) +"#{project.name}".sub(/^(.{#{char_limit}}[^\s]*\s).*$/, '\1 (...)'), "LR")
         
           options[:pdf].SetY(options[:top])
@@ -293,7 +305,7 @@ module Redmine
           options[:pdf].SetY(options[:top])
           options[:pdf].SetX(15)
           
-          char_limit = 30 - options[:indent]
+          char_limit = PDF::MaxCharactorsForSubject - options[:indent]
           options[:pdf].Cell(options[:subject_width]-15, 5, (" " * options[:indent]) +"#{version.name}".sub(/^(.{#{char_limit}}[^\s]*\s).*$/, '\1 (...)'), "LR")
         
           options[:pdf].SetY(options[:top])
@@ -378,7 +390,7 @@ module Redmine
           options[:pdf].SetY(options[:top])
           options[:pdf].SetX(15)
           
-          char_limit = 30 - options[:indent]
+          char_limit = PDF::MaxCharactorsForSubject - options[:indent]
           options[:pdf].Cell(options[:subject_width]-15, 5, (" " * options[:indent]) +"#{issue.tracker} #{issue.id}: #{issue.subject}".sub(/^(.{#{char_limit}}[^\s]*\s).*$/, '\1 (...)'), "LR")
         
           options[:pdf].SetY(options[:top])
@@ -661,11 +673,11 @@ module Redmine
         pdf.AddPage("L")
         pdf.SetFontStyle('B',12)
         pdf.SetX(15)
-        pdf.Cell(70, 20, project.to_s)
+        pdf.Cell(PDF::LeftPaneWidth, 20, project.to_s)
         pdf.Ln
         pdf.SetFontStyle('B',9)
         
-        subject_width = 70
+        subject_width = PDF::LeftPaneWidth
         header_heigth = 5
         
         headers_heigth = header_heigth
@@ -681,7 +693,7 @@ module Redmine
           end
         end
         
-        g_width = 210
+        g_width = PDF.right_pane_width
         zoom = (g_width) / (self.date_to - self.date_from + 1)
         g_height = 120
         t_height = g_height + headers_heigth
