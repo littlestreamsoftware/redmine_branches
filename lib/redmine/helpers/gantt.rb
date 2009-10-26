@@ -162,7 +162,7 @@ module Redmine
         end
 
         # Third, Versions
-        project.versions.each do |version|
+        project.versions.sort.each do |version|
           version_rendering = tasks_subjects_for_version(version, options)
           output << version_rendering if options[:format] == :html
         end
