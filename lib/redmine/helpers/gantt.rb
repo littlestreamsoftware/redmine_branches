@@ -321,7 +321,17 @@ module Redmine
           when :html
             output = ''
             i_left = ((version.start_date - self.date_from)*options[:zoom]).floor
+            # TODO: or version.fixed_issues.collect(&:start_date).min
+            start_left = ((version.fixed_issues.minimum('start_date') - self.date_from)*options[:zoom]).floor
 
+            # Starting diamond
+            if start_left <= options[:g_width]
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left + 12 }px;background:#fff;' class='task'>"
+              output << "</div>"
+            end
+
+            # Ending diamond
             # Don't show items too far ahead
             if i_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
