@@ -322,8 +322,36 @@ module Redmine
             output = ''
             i_left = ((version.start_date - self.date_from)*options[:zoom]).floor
             # TODO: or version.fixed_issues.collect(&:start_date).min
-            start_left = ((version.fixed_issues.minimum('start_date') - self.date_from)*options[:zoom]).floor
+            start_date = version.fixed_issues.minimum('start_date') if version.fixed_issues.present?
+            start_date ||= self.date_from
+            start_left = ((start_date - self.date_from)*options[:zoom]).floor
 
+            i_end_date = ((version.due_date <= self.date_to) ? version.due_date : self.date_to )
+            i_done_date = start_date + ((version.due_date - start_date+1)* version.completed_pourcent/100).floor
+            i_done_date = (i_done_date <= self.date_from ? self.date_from : i_done_date )
+            i_done_date = (i_done_date >= self.date_to ? self.date_to : i_done_date )
+            
+            i_late_date = [i_end_date, Date.today].min if start_date < Date.today
+
+            i_width = (i_left - start_left + 1).floor - 2                  # total width of the issue (- 2 for left and right borders)
+            d_width = ((i_done_date - start_date)*options[:zoom]).floor - 2                     # done width
+            l_width = i_late_date ? ((i_late_date - start_date+1)*options[:zoom]).floor - 2 : 0 # delay width
+
+            # Bar graphic
+
+            # Make sure that negative i_left and i_width don't
+            # overflow the subject
+            if i_width > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ i_width }px;' class='task milestone_todo'>&nbsp;</div>"
+            end
+            if l_width > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ l_width }px;' class='task milestone_late'>&nbsp;</div>"
+            end
+            if d_width > 0
+              output<< "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ d_width }px;' class='task milestone_done'>&nbsp;</div>"
+            end
+
+            
             # Starting diamond
             if start_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
@@ -339,7 +367,8 @@ module Redmine
               output << h("#{version.project} -") unless @project && @project == version.project
               output << "<strong>#{h version }</strong>"
               output << "</div>"
-              end
+            end
+
             output
           when :image
             options[:image].stroke('transparent')
