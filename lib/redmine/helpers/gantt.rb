@@ -365,7 +365,7 @@ module Redmine
               output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
               output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
               output << h("#{version.project} -") unless @project && @project == version.project
-              output << "<strong>#{h version }</strong>"
+              output << "<strong>#{h version } #{h version.completed_pourcent.to_i.to_s}%</strong>"
               output << "</div>"
             end
 
