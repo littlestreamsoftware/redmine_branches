@@ -286,7 +286,7 @@ module Redmine
           output = ''
           output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if version.is_a? Version
-            output << '<span class="icon icon-package">'
+            output << "<span class='icon icon-package #{version.behind_schedule? ? 'version_behind_schedule' : ''} #{version.late? ? 'version_late' : ''}'>"
             output << view.link_to_version(version)
             output << '</span>'
           else
