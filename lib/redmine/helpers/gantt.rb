@@ -250,7 +250,7 @@ module Redmine
             output << view.link_to_project(project)
             output << '</span>'
           else
-            ActiveRecord::Base.logger.warn "Gantt#subject_for_project was not given a project"
+            ActiveRecord::Base.logger.debug "Gantt#subject_for_project was not given a project"
             ''
           end
           output << "</small></div>"
@@ -290,7 +290,7 @@ module Redmine
             output << view.link_to_version(version)
             output << '</span>'
           else
-            ActiveRecord::Base.logger.warn "Gantt#subject_for_version was not given a version"
+            ActiveRecord::Base.logger.debug "Gantt#subject_for_version was not given a version"
             ''
           end
           output << "</small></div>"
@@ -397,7 +397,7 @@ module Redmine
             end
           end
         else
-          ActiveRecord::Base.logger.warn "Gantt#line_for_version was not given a version with a start_date"
+          ActiveRecord::Base.logger.debug "Gantt#line_for_version was not given a version with a start_date"
           ''
         end
       end
@@ -415,7 +415,7 @@ module Redmine
             output << h(issue.subject)
             output << '</span>'
           else
-            ActiveRecord::Base.logger.warn "Gantt#subject_for_issue was not given an issue"
+            ActiveRecord::Base.logger.debug "Gantt#subject_for_issue was not given an issue"
             ''
           end
           output << "</small></div>"
@@ -583,7 +583,7 @@ module Redmine
             options[:pdf].Cell(30, 2, "#{issue.status} #{issue.done_ratio}%")
           end
         else
-          ActiveRecord::Base.logger.warn "GanttHelper#line_for_issue was not given an issue with a due_before"
+          ActiveRecord::Base.logger.debug "GanttHelper#line_for_issue was not given an issue with a due_before"
           ''
         end
       end
