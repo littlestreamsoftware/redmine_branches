@@ -870,4 +870,52 @@ class ProjectTest < ActiveSupport::TestCase
     end
 
   end
+
+  context "#due_date" do
+    setup do
+      ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
+      @project = Project.generate!(:identifier => 'test0')
+      @project.trackers << Tracker.generate!
+    end
+    
+    should "be nil if there are no issues on the project" do
+      assert_nil @project.due_date
+    end
+
+    should "be nil if issue tracking is disabled" do
+      Issue.generate_for_project!(@project, :due_date => Date.today)
+      @project.enabled_modules.find_all_by_name('issue_tracking').each {|m| m.destroy}
+      @project.reload
+      
+      assert_nil @project.due_date
+    end
+
+    should "be the latest due date of it's issues" do
+      future = 7.days.from_now.to_date
+      Issue.generate_for_project!(@project, :due_date => future)
+      Issue.generate_for_project!(@project, :due_date => Date.today)
+
+      assert_equal future, @project.due_date
+    end
+
+    should "be the latest due date of it's versions" do
+      future = 7.days.from_now.to_date
+      @project.versions << Version.generate!(:effective_date => future)
+      @project.versions << Version.generate!(:effective_date => Date.today)
+      
+
+      assert_equal future, @project.due_date
+
+    end
+
+    should "pick the latest date from it's issues and versions" do
+      future = 7.days.from_now.to_date
+      far_future = 14.days.from_now.to_date
+      Issue.generate_for_project!(@project, :due_date => far_future)
+      @project.versions << Version.generate!(:effective_date => future)
+      
+      assert_equal far_future, @project.due_date
+    end
+
+  end
 end

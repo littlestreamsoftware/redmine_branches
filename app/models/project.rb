@@ -424,6 +424,16 @@ class Project < ActiveRecord::Base
   def start_date
     issues.minimum('start_date') if module_enabled?(:issue_tracking)
   end
+
+  # The latest due date of an issue or version
+  def due_date
+    if module_enabled?(:issue_tracking)
+      [
+       issues.maximum('due_date'),
+       versions.maximum('effective_date')
+      ].compact.max
+    end
+  end
   
   # Return true if this project is allowed to do the specified action.
   # action can be:
