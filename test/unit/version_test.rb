@@ -104,6 +104,44 @@ class VersionTest < ActiveSupport::TestCase
     assert_progress_equal (25.0*0.2 + 25.0*1 + 10.0*0.3 + 40.0*0.1)/100.0*100, v.completed_pourcent
     assert_progress_equal 25.0/100.0*100, v.closed_pourcent
   end
+
+  context "#behind_schedule?" do
+    setup do
+      ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
+      @project = Project.generate!(:identifier => 'test0')
+      @project.trackers << Tracker.generate!
+    end
+    
+    should "be false if there are no issues assigned" do
+      version = Version.generate!(:fixed_issues => [], :effective_date => Date.yesterday)
+      assert_equal false, version.behind_schedule?
+    end
+
+    should "be false if there is no effective_date" do
+      version = Version.generate!(:effective_date => nil)
+      assert_equal false, version.behind_schedule?
+    end
+
+    should "be false if all of the issues are ahead of schedule" do
+      version = Version.generate!(:effective_date => 7.days.from_now.to_date,
+                                  :fixed_issues => [
+                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60), # 14 day span, 60% done, 50% time left
+                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60) # 14 day span, 60% done, 50% time left
+                                                   ])
+      assert_equal 60, version.completed_pourcent
+      assert_equal false, version.behind_schedule?
+    end
+
+    should "be true if any of the issues are behind schedule" do
+      version = Version.generate!(:effective_date => 7.days.from_now.to_date,
+                                  :fixed_issues => [
+                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60), # 14 day span, 60% done, 50% time left
+                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 20) # 14 day span, 20% done, 50% time left
+                                                   ])
+      assert_equal 40, version.completed_pourcent
+      assert_equal true, version.behind_schedule?
+    end
+end
   
   context "#estimated_hours" do
     setup do
