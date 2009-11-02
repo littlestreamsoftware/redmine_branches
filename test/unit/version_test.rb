@@ -141,7 +141,46 @@ class VersionTest < ActiveSupport::TestCase
       assert_equal 40, version.completed_pourcent
       assert_equal true, version.behind_schedule?
     end
-end
+  end
+
+  context "#late?" do
+    setup do
+      ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
+      @project = Project.generate!(:identifier => 'test0')
+      @project.trackers << Tracker.generate!
+    end
+
+    should "return false if the version is complete" do
+      assert Version.generate!
+    end
+
+    context "incomplete version" do
+
+      should "be false if there is no due_date" do
+        version = Version.generate!(:effective_date => nil,
+                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
+        assert_equal false, version.late?
+      end
+
+      should "be false if the due_date is after today" do
+        version = Version.generate!(:effective_date => 7.days.from_now.to_date,
+                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
+        assert_equal false, version.late?
+      end
+
+      should "be true if the due_date is today" do
+        version = Version.generate!(:effective_date => Date.today,
+                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
+        assert_equal true, version.late?
+      end
+
+      should "be true if the due_date is before today" do
+        version = Version.generate!(:effective_date => 3.days.ago.to_date,
+                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
+        assert_equal true, version.late?
+      end
+    end
+  end
   
   context "#estimated_hours" do
     setup do
