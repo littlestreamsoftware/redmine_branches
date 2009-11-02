@@ -419,6 +419,11 @@ class Project < ActiveRecord::Base
   def short_description(length = 255)
     description.gsub(/^(.{#{length}}[^\n\r]*).*$/m, '\1...').strip if description
   end
+
+  # The earliest start date of an issue
+  def start_date
+    issues.minimum('start_date') if module_enabled?(:issue_tracking)
+  end
   
   # Return true if this project is allowed to do the specified action.
   # action can be:

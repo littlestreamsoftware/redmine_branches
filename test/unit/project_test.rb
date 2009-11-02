@@ -842,4 +842,32 @@ class ProjectTest < ActiveSupport::TestCase
     
   end
 
+  context "#start_date" do
+    setup do
+      ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
+      @project = Project.generate!(:identifier => 'test0')
+      @project.trackers << Tracker.generate!
+    end
+    
+    should "be nil if there are no issues on the project" do
+      assert_nil @project.start_date
+    end
+
+    should "be nil if issue tracking is disabled" do
+      Issue.generate_for_project!(@project, :start_date => Date.today)
+      @project.enabled_modules.find_all_by_name('issue_tracking').each {|m| m.destroy}
+      @project.reload
+      
+      assert_nil @project.start_date
+    end
+
+    should "be the earliest start date of it's issues" do
+      early = 7.days.ago.to_date
+      Issue.generate_for_project!(@project, :start_date => Date.today)
+      Issue.generate_for_project!(@project, :start_date => early)
+
+      assert_equal early, @project.start_date
+    end
+
+  end
 end
