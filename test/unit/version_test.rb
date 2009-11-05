@@ -141,6 +141,17 @@ class VersionTest < ActiveSupport::TestCase
       assert_equal 40, version.completed_pourcent
       assert_equal true, version.behind_schedule?
     end
+
+    should "be false if all of the issues are complete" do
+      version = Version.generate!(:effective_date => 7.days.ago.to_date,
+                                  :fixed_issues => [
+                                                    Issue.generate_for_project!(@project, :start_date => 14.days.ago, :done_ratio => 100, :status => IssueStatus.find(5)), # 7 day span
+                                                    Issue.generate_for_project!(@project, :start_date => 14.days.ago, :done_ratio => 100, :status => IssueStatus.find(5)) # 7 day span
+                                                   ])
+      assert_equal 100, version.completed_pourcent
+      assert_equal false, version.behind_schedule?
+
+    end
   end
 
   context "#late?" do

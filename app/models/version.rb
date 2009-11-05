@@ -75,8 +75,9 @@ class Version < ActiveRecord::Base
   end
 
   def behind_schedule?
-    # TODO: should use #start_date but that method is wrong...
-    if due_date && fixed_issues.present?
+    if completed_pourcent == 100
+      return false
+    elsif due_date && fixed_issues.present? # TODO: should use #start_date but that method is wrong...
       start_date = fixed_issues.minimum('start_date')
       done_date = start_date + ((due_date - start_date+1)* completed_pourcent/100).floor
       return done_date <= Date.today
