@@ -331,13 +331,12 @@ module Redmine
 
             output
           when :image
-            # TODO:
             options[:image].stroke('transparent')
-            i_left = options[:subject_width] + ((project.start_date - @date_from)*options[:zoom]).floor
+            i_left = options[:subject_width] + ((project.due_date - self.date_from)*options[:zoom]).floor
 
             # Make sure negative i_left doesn't overflow the subject
             if i_left > options[:subject_width]
-              options[:image].fill('green')
+              options[:image].fill('blue')
               options[:image].rectangle(i_left, options[:top], i_left + 6, options[:top] - 6)        
               options[:image].fill('black')
               options[:image].text(i_left + 11, options[:top] + 1, project.name)
