@@ -919,51 +919,43 @@ class ProjectTest < ActiveSupport::TestCase
 
   end
 
-  context "#completed_percent" do
+  context "Project#completed_percent" do
     setup do
       ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
       @project = Project.generate!(:identifier => 'test0')
       @project.trackers << Tracker.generate!
     end
 
-    context "no issues" do
-      should "be 0" do
+    context "no versions" do
+      should "be 100" do
+        assert_equal 100, @project.completed_percent
+      end
+    end
+
+    context "with versions" do
+      should "return 0 if the versions have no issues" do
+        Version.generate!(:project => @project)
+        Version.generate!(:project => @project)
+
         assert_equal 0, @project.completed_percent
       end
-    end
 
-    context "no open issues" do
-      should "be 100" do
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'))
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'))
-        
-        assert_equal 100, @project.completed_percent
-      end
-    end
-
-    context "mixture of open and closed issues" do
-      should "return the percent complete weighted against the number of issues for open issues" do
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 50)
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 20)
-
-        assert_equal 35, @project.completed_percent
-      end
-
-      should "return the 100% for only closed issues" do
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'), :estimated_hours => 10, :done_ratio => 50)
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'), :estimated_hours => 10, :done_ratio => 20)
+      should "return 100 if the version has only closed issues" do
+        v1 = Version.generate!(:project => @project)
+        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'), :fixed_version => v1)
+        v2 = Version.generate!(:project => @project)
+        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'), :fixed_version => v2)
 
         assert_equal 100, @project.completed_percent
       end
 
-      should "return the percent complete weighted against the number of issues for both open and closed issues" do
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 40)
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 10)
+      should "return the averaged completed percent of the versions (not weighted)" do
+        v1 = Version.generate!(:project => @project)
+        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 50, :fixed_version => v1)
+        v2 = Version.generate!(:project => @project)
+        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('New'), :estimated_hours => 10, :done_ratio => 50, :fixed_version => v2)
 
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'), :estimated_hours => 10, :done_ratio => 70)
-        Issue.generate_for_project!(@project, :status => IssueStatus.find_by_name('Closed'), :estimated_hours => 10, :done_ratio => 100)
-
-        assert_equal 62.5, @project.completed_percent
+        assert_equal 50, @project.completed_percent
       end
 
     end

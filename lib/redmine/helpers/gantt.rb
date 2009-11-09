@@ -276,8 +276,92 @@ module Redmine
       end
 
       def line_for_project(project, options)
-        # Nothing
-        ''
+        # Skip versions that don't have a start_date
+        if project.is_a?(Project) && project.start_date
+          case options[:format]
+          when :html
+            output = ''
+            i_left = ((project.start_date - self.date_from)*options[:zoom]).floor
+
+            start_date = ((project.start_date <= self.date_from) ? self.date_from : project.start_date)
+            start_left = ((start_date - self.date_from)*options[:zoom]).floor
+
+            i_end_date = ((project.due_date <= self.date_to) ? project.due_date : self.date_to )
+            i_done_date = start_date + ((project.due_date - start_date+1)* project.completed_percent(:include_subprojects => true)/100).floor
+            i_done_date = (i_done_date <= self.date_from ? self.date_from : i_done_date )
+            i_done_date = (i_done_date >= self.date_to ? self.date_to : i_done_date )
+            
+            i_late_date = [i_end_date, Date.today].min if start_date < Date.today
+            i_end = ((i_end_date - self.date_from) * options[:zoom]).floor
+
+            i_width = (i_end - i_left + 1).floor - 2                  # total width of the issue (- 2 for left and right borders)
+            d_width = ((i_done_date - start_date)*options[:zoom]).floor - 2                     # done width
+            l_width = i_late_date ? ((i_late_date - start_date+1)*options[:zoom]).floor - 2 : 0 # delay width
+
+            # Bar graphic
+
+            # Make sure that negative i_left and i_width don't
+            # overflow the subject
+            if i_end > 0 && i_left <= options[:g_width]
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ i_end }px;' class='task project_todo'>&nbsp;</div>"
+            end
+            if l_width > 0 && i_left <= options[:g_width]
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ l_width }px;' class='task project_late'>&nbsp;</div>"
+            end
+            if d_width > 0 && i_left <= options[:g_width]
+              output<< "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ d_width }px;' class='task project_done'>&nbsp;</div>"
+            end
+
+            
+            # Starting diamond
+            if start_left <= options[:g_width]
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task project-line'>&nbsp;</div>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left + 12 }px;background:#fff;' class='task'>"
+              output << "</div>"
+            end
+
+            # Ending diamond
+            # Don't show items too far ahead
+            if i_end <= options[:g_width]
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_end }px;width:15px;' class='task project-line'>&nbsp;</div>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_end + 12 }px;background:#fff;' class='task'>"
+              output << "<strong>#{h project } #{h project.completed_percent(:include_subprojects => true).to_i.to_s}%</strong>"
+              output << "</div>"
+            end
+
+            output
+          when :image
+            # TODO:
+            options[:image].stroke('transparent')
+            i_left = options[:subject_width] + ((project.start_date - @date_from)*options[:zoom]).floor
+
+            # Make sure negative i_left doesn't overflow the subject
+            if i_left > options[:subject_width]
+              options[:image].fill('green')
+              options[:image].rectangle(i_left, options[:top], i_left + 6, options[:top] - 6)        
+              options[:image].fill('black')
+              options[:image].text(i_left + 11, options[:top] + 1, project.name)
+            end
+          when :pdf
+            # TODO:
+            options[:pdf].SetY(options[:top]+1.5)
+            i_left = ((project.start_date - @date_from)*options[:zoom]) 
+
+            # Make sure negative i_left doesn't overflow the subject
+            if i_left > 0
+              options[:pdf].SetX(options[:subject_width] + i_left)
+              options[:pdf].SetFillColor(50,200,50)
+              options[:pdf].Cell(2, 2, "", 0, 0, "", 1) 
+        
+              options[:pdf].SetY(options[:top]+1.5)
+              options[:pdf].SetX(options[:subject_width] + i_left + 3)
+              options[:pdf].Cell(30, 2, "#{project.name}")
+            end
+          end
+        else
+          ActiveRecord::Base.logger.debug "Gantt#line_for_project was not given a project with a start_date"
+          ''
+        end
       end
 
       def subject_for_version(version, options)
@@ -341,13 +425,13 @@ module Redmine
 
             # Make sure that negative i_left and i_width don't
             # overflow the subject
-            if i_width > 0
+            if i_width > 0 && i_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ i_width }px;' class='task milestone_todo'>&nbsp;</div>"
             end
-            if l_width > 0
+            if l_width > 0 && i_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ l_width }px;' class='task milestone_late'>&nbsp;</div>"
             end
-            if d_width > 0
+            if d_width > 0 && i_left <= options[:g_width]
               output<< "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ d_width }px;' class='task milestone_done'>&nbsp;</div>"
             end
 

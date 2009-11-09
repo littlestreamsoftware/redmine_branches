@@ -420,9 +420,15 @@ class Project < ActiveRecord::Base
     description.gsub(/^(.{#{length}}[^\n\r]*).*$/m, '\1...').strip if description
   end
 
-  # The earliest start date of an issue
+  # The earliest start date of a project, based on it's issues and versions
   def start_date
-    issues.minimum('start_date') if module_enabled?(:issue_tracking)
+    if module_enabled?(:issue_tracking)
+      [
+       issues.minimum('start_date'),
+       shared_versions.collect(&:effective_date),
+       shared_versions.collect {|v| v.fixed_issues.minimum('start_date')}
+      ].flatten.compact.min
+    end
   end
 
   # The latest due date of an issue or version
@@ -430,20 +436,27 @@ class Project < ActiveRecord::Base
     if module_enabled?(:issue_tracking)
       [
        issues.maximum('due_date'),
-       versions.maximum('effective_date')
-      ].compact.max
+       shared_versions.collect(&:effective_date),
+       shared_versions.collect {|v| v.fixed_issues.maximum('due_date')}
+      ].flatten.compact.max
     end
   end
 
   # Returns the percent completed for this project, based on the
-  # amount of open/closed issues and the time spent on the open issues.
-  def completed_percent
-    if issues.count == 0
-      0
-    elsif open_issues_count == 0
-      100
+  # progress on it's versions.
+  def completed_percent(options={:include_subprojects => false})
+    if options.delete(:include_subprojects)
+      total = self_and_descendants.collect(&:completed_percent).sum
+
+      total / self_and_descendants.count
     else
-      issues_progress(false) + issues_progress(true)
+      if versions.count > 0
+        total = versions.collect(&:completed_pourcent).sum
+
+        total / versions.count
+      else
+        100
+      end
     end
   end
   
@@ -743,50 +756,5 @@ class Project < ActiveRecord::Base
       subproject.send :archive!
     end
     update_attribute :status, STATUS_ARCHIVED
-  end
-
-  # Returns the total amount of open issues for this version.
-  # TODO: refactor with Version#open_issues_count
-  def open_issues_count
-    @open_issues_count ||= Issue.count(:all, :conditions => ["project_id = ? AND is_closed = ?", self.id, false], :include => :status)
-  end
-
-  # Returns the average estimated time of assigned issues
-  # or 1 if no issue has an estimated time
-  # Used to weigth unestimated issues in progress calculation
-  # TODO: refactor with Version#estimated_average
-  def estimated_average
-    if @estimated_average.nil?
-      average = issues.average(:estimated_hours).to_f
-      if average == 0
-        average = 1
-      end
-      @estimated_average = average
-    end
-    @estimated_average
-  end
-
-
-  # Returns the total progress of open or closed issues.  The returned percentage takes into account
-  # the amount of estimated time set for this version.
-  #
-  # Examples:
-  # issues_progress(true)   => returns the progress percentage for open issues.
-  # issues_progress(false)  => returns the progress percentage for closed issues.
-  # TODO: refactor with Version#issues_progress
-  def issues_progress(open)
-    @issues_progress ||= {}
-    @issues_progress[open] ||= begin
-      progress = 0
-      if issues.count > 0
-        ratio = open ? 'done_ratio' : 100
-        
-        done = issues.sum("COALESCE(estimated_hours, #{estimated_average}) * #{ratio}",
-                                  :include => :status,
-                                  :conditions => ["is_closed = ?", !open]).to_f
-        progress = done / (estimated_average * issues.count)
-      end
-      progress
-    end
   end
 end
