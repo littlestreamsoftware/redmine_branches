@@ -442,6 +442,10 @@ class Project < ActiveRecord::Base
     end
   end
 
+  def overdue?
+    active? && !due_date.nil? && (due_date < Date.today)
+  end
+
   # Returns the percent completed for this project, based on the
   # progress on it's versions.
   def completed_percent(options={:include_subprojects => false})

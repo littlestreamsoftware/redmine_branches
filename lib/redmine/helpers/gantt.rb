@@ -246,7 +246,7 @@ module Redmine
 
           output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if project.is_a? Project
-            output << '<span class="icon icon-projects">'
+            output << "<span class='icon icon-projects #{project.overdue? ? 'project-overdue' : ''}'>"
             output << view.link_to_project(project)
             output << '</span>'
           else
@@ -490,7 +490,7 @@ module Redmine
           output = ''
           output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if issue.is_a? Issue
-            output << '<span class="icon icon-issue">'
+            output << "<span class='icon icon-issue #{issue.overdue? ? 'issue-overdue' : ''}'>"
             output << h("#{issue.project} -") unless @project && @project == issue.project
             output << view.link_to_issue(issue)
             output << ":"

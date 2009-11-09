@@ -804,7 +804,7 @@ background-image:url('../images/close_hl.png');
 .project_todo { background:#fff url(../images/milestone_todo.png); border: 1px solid #fff; height: 2px; margin-top: 3px;}
 
 .version_behind_schedule a {color: #f66914;}
-.version_late a {color: #f00;}
+.version_late a, .issue-overdue a, .project-overdue a {color: #f00;}
 
 /***** Icons *****/
 .icon {
