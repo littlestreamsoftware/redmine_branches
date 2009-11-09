@@ -342,14 +342,13 @@ module Redmine
               options[:image].text(i_left + 11, options[:top] + 1, project.name)
             end
           when :pdf
-            # TODO:
             options[:pdf].SetY(options[:top]+1.5)
-            i_left = ((project.start_date - @date_from)*options[:zoom]) 
+            i_left = ((project.due_date - @date_from)*options[:zoom])
 
             # Make sure negative i_left doesn't overflow the subject
             if i_left > 0
               options[:pdf].SetX(options[:subject_width] + i_left)
-              options[:pdf].SetFillColor(50,200,50)
+              options[:pdf].SetFillColor(50,50,200)
               options[:pdf].Cell(2, 2, "", 0, 0, "", 1) 
         
               options[:pdf].SetY(options[:top]+1.5)
