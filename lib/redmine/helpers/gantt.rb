@@ -326,10 +326,10 @@ module Redmine
             if i_end <= options[:g_width]
               # Display the status even if it's floated off to the left
               status_px = i_end + 12
-              status_px = 12 if status_px <= 0
+              status_px = 0 if status_px <= 0
               
-              output << "<div style='top:#{ options[:top] }px;left:#{ i_end }px;width:15px;' class='task project-line'>&nbsp;</div>"
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;width:15px;' class='task project-line'>&nbsp;</div>" unless status_px == 0 # don't draw marker at 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label'>"
               output << "<strong>#{h project } #{h project.completed_percent(:include_subprojects => true).to_i.to_s}%</strong>"
               output << "</div>"
             end
@@ -451,10 +451,10 @@ module Redmine
             if i_left <= options[:g_width]
               # Display the status even if it's floated off to the left
               status_px = i_left + 12
-              status_px = 12 if status_px <= 0
+              status_px = 0 if status_px <= 0
               
-              output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;width:15px;' class='task milestone'>&nbsp;</div>" unless status_px == 0 # don't draw marker at 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label'>"
               output << h("#{version.project} -") unless @project && @project == version.project
               output << "<strong>#{h version } #{h version.completed_pourcent.to_i.to_s}%</strong>"
               output << "</div>"
