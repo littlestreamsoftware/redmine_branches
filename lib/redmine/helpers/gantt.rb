@@ -323,8 +323,12 @@ module Redmine
             # Ending diamond
             # Don't show items too far ahead
             if i_end <= options[:g_width]
+              # Display the status even if it's floated off to the left
+              status_px = i_end + 5
+              status_px = 5 if status_px <= 0
+              
               output << "<div style='top:#{ options[:top] }px;left:#{ i_end }px;width:15px;' class='task project-line'>&nbsp;</div>"
-              output << "<div style='top:#{ options[:top] }px;left:#{ i_end + 12 }px;background:#fff;' class='task'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;background:#fff;' class='task'>"
               output << "<strong>#{h project } #{h project.completed_percent(:include_subprojects => true).to_i.to_s}%</strong>"
               output << "</div>"
             end
@@ -444,8 +448,12 @@ module Redmine
             # Ending diamond
             # Don't show items too far ahead
             if i_left <= options[:g_width]
+              # Display the status even if it's floated off to the left
+              status_px = i_left + 5
+              status_px = 5 if status_px <= 0
+              
               output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
-              output << "<div style='top:#{ options[:top] }px;left:#{ i_left + 12 }px;background:#fff;' class='task'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;background:#fff;' class='task'>"
               output << h("#{version.project} -") unless @project && @project == version.project
               output << "<strong>#{h version } #{h version.completed_pourcent.to_i.to_s}%</strong>"
               output << "</div>"
@@ -557,7 +565,12 @@ module Redmine
             if d_width > 0
               output<< "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:#{ d_width }px;' class='#{css} task_done'>&nbsp;</div>"
             end
-            output << "<div style='top:#{ options[:top] }px;left:#{ i_left + i_width + 5 }px;background:#fff;' class='#{css}'>"
+
+            # Display the status even if it's floated off to the left
+            status_px = i_left + i_width + 5
+            status_px = 5 if status_px <= 0
+            
+            output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;background:#fff;' class='#{css}'>"
             output << issue.status.name
             output << ' '
             output << (issue.done_ratio).to_i.to_s
