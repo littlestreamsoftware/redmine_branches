@@ -325,8 +325,8 @@ module Redmine
             # Don't show items too far ahead
             if i_end <= options[:g_width]
               # Display the status even if it's floated off to the left
-              status_px = i_end + 5
-              status_px = 5 if status_px <= 0
+              status_px = i_end + 12
+              status_px = 12 if status_px <= 0
               
               output << "<div style='top:#{ options[:top] }px;left:#{ i_end }px;width:15px;' class='task project-line'>&nbsp;</div>"
               output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label'>"
@@ -450,8 +450,8 @@ module Redmine
             # Don't show items too far ahead
             if i_left <= options[:g_width]
               # Display the status even if it's floated off to the left
-              status_px = i_left + 5
-              status_px = 5 if status_px <= 0
+              status_px = i_left + 12
+              status_px = 12 if status_px <= 0
               
               output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
               output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label'>"
