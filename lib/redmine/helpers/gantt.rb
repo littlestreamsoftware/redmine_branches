@@ -283,7 +283,8 @@ module Redmine
             output = ''
             i_left = ((project.start_date - self.date_from)*options[:zoom]).floor
 
-            start_date = ((project.start_date <= self.date_from) ? self.date_from : project.start_date)
+            start_date = project.start_date
+            start_date ||= self.date_from
             start_left = ((start_date - self.date_from)*options[:zoom]).floor
 
             i_end_date = ((project.due_date <= self.date_to) ? project.due_date : self.date_to )
@@ -303,7 +304,7 @@ module Redmine
             # Make sure that negative i_left and i_width don't
             # overflow the subject
             if i_end > 0 && i_left <= options[:g_width]
-              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ i_end }px;' class='task project_todo'>&nbsp;</div>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ i_width }px;' class='task project_todo'>&nbsp;</div>"
             end
             if l_width > 0 && i_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ l_width }px;' class='task project_late'>&nbsp;</div>"
