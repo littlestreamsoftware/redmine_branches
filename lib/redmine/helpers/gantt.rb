@@ -317,7 +317,7 @@ module Redmine
             # Starting diamond
             if start_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task project-line'>&nbsp;</div>"
-              output << "<div style='top:#{ options[:top] }px;left:#{ start_left + 12 }px;background:#fff;' class='task'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left + 12 }px;' class='task label'>"
               output << "</div>"
             end
 
@@ -329,7 +329,7 @@ module Redmine
               status_px = 5 if status_px <= 0
               
               output << "<div style='top:#{ options[:top] }px;left:#{ i_end }px;width:15px;' class='task project-line'>&nbsp;</div>"
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;background:#fff;' class='task'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label'>"
               output << "<strong>#{h project } #{h project.completed_percent(:include_subprojects => true).to_i.to_s}%</strong>"
               output << "</div>"
             end
@@ -454,7 +454,7 @@ module Redmine
               status_px = 5 if status_px <= 0
               
               output << "<div style='top:#{ options[:top] }px;left:#{ i_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;background:#fff;' class='task'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label'>"
               output << h("#{version.project} -") unless @project && @project == version.project
               output << "<strong>#{h version } #{h version.completed_pourcent.to_i.to_s}%</strong>"
               output << "</div>"
@@ -571,7 +571,7 @@ module Redmine
             status_px = i_left + i_width + 5
             status_px = 5 if status_px <= 0
             
-            output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;background:#fff;' class='#{css}'>"
+            output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='#{css} label'>"
             output << issue.status.name
             output << ' '
             output << (issue.done_ratio).to_i.to_s
