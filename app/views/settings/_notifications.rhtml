@@ -9,11 +9,16 @@
 <p><%= setting_check_box :plain_text_mail %></p>
 </div>
 
-<fieldset class="box settings" id="notified_events"><legend><%=l(:text_select_mail_notifications)%></legend>
-	<%= setting_multiselect(:notified_events, 
-        @notifiables.collect {|notifiable| [l_or_humanize(notifiable, :prefix => 'label_'), notifiable]}, :label => false) %>
-
-	<p><%= check_all_links('notified_events') %></p>
+<fieldset class="box" id="notified_events"><legend><%=l(:text_select_mail_notifications)%></legend>
+<% @notifiables.each do |notifiable, options| %>
+  <label<%= (options.key?(:parent) ? ' style="padding-left:20px"' : '') %>>
+    <% css = options.key?(:parent) ? "parent-#{options[:parent]}" : '' %>
+    <%= check_box_tag 'settings[notified_events][]', notifiable, Setting.notified_events.include?(notifiable), :onclick => options.delete(:onclick), :class => css %>
+    <%= l_or_humanize(notifiable, :prefix => 'label_') %>
+  </label><br />
+<% end %>
+<%= hidden_field_tag 'settings[notified_events][]', '' %>
+<p><%= check_all_links('notified_events') %></p>
 </fieldset>
 
 <fieldset class="box"><legend><%= l(:setting_emails_footer) %></legend>
