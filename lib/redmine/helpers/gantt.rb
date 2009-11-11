@@ -122,22 +122,22 @@ module Redmine
         count
       end
       
-      def tasks_subjects(options={})
+      def subjects(options={})
         options = {:indent => 4, :render => :subject, :format => :html}.merge(options)
 
         output = ''
         if @project
-          output << tasks_subjects_for_project(@project, options)
+          output << render_project(@project, options)
         else
           Project.roots.each do |project|
-            output << tasks_subjects_for_project(project, options)
+            output << render_project(project, options)
           end
         end
 
         output
       end
 
-      def tasks_subjects_for_project(project, options={})
+      def render_project(project, options={})
         options[:indent_increment] = 20 unless options.key? :indent_increment
         options[:top_increment] = 20 unless options.key? :top_increment
 
@@ -157,19 +157,19 @@ module Redmine
         # Second, Issues without a version
         issues = project.issues.for_gantt.without_version.with_query(@query)
         if issues
-          issue_rendering = tasks_subjects_for_issues(issues, options)
+          issue_rendering = render_issues(issues, options)
           output << issue_rendering if options[:format] == :html
         end
 
         # Third, Versions
         project.versions.sort.each do |version|
-          version_rendering = tasks_subjects_for_version(version, options)
+          version_rendering = render_version(version, options)
           output << version_rendering if options[:format] == :html
         end
 
         # Fourth, subprojects
         project.children.each do |project|
-          subproject_rendering = tasks_subjects_for_project(project, options)
+          subproject_rendering = render_project(project, options)
           output << subproject_rendering if options[:format] == :html
         end
 
@@ -179,7 +179,7 @@ module Redmine
         output
       end
 
-      def tasks_subjects_for_issues(issues, options={})
+      def render_issues(issues, options={})
         output = ''
         issues.each do |i|
           issue_rendering = if options[:render] == :subject
@@ -194,7 +194,7 @@ module Redmine
         output
       end
 
-      def tasks_subjects_for_version(version, options={})
+      def render_version(version, options={})
         output = ''
         # Version header
         version_rendering = if options[:render] == :subject
@@ -217,22 +217,22 @@ module Redmine
         if issues
           # Indent issues
           options[:indent] += options[:indent_increment]
-          output << tasks_subjects_for_issues(issues, options)
+          output << render_issues(issues, options)
           options[:indent] -= options[:indent_increment]
         end
 
         output
       end
 
-      def tasks(options)
+      def lines(options)
         options = {:indent => 4, :render => :line, :format => :html}.merge(options)
         output = ''
 
         if @project
-          output << tasks_subjects_for_project(@project, options)
+          output << render_project(@project, options)
         else
           Project.roots.each do |project|
-            output << tasks_subjects_for_project(project, options)
+            output << render_project(project, options)
           end
         end
         
@@ -786,7 +786,7 @@ module Redmine
             
         # content
         top = headers_heigth + 20
-        image_tasks(gc, :top => top, :zoom => zoom, :subject_width => subject_width)
+        image_lines(gc, :top => top, :zoom => zoom, :subject_width => subject_width)
         
         # today red line
         if Date.today >= @date_from and Date.today <= date_to
@@ -897,12 +897,12 @@ module Redmine
         
         # Tasks
         top = headers_heigth + y_start
-        pdf_tasks(pdf, {
-                :top => top,
-                :zoom => zoom,
-                :subject_width => subject_width,
-                :g_width => g_width
-              })
+        pdf_subjects_and_lines(pdf, {
+                                 :top => top,
+                                 :zoom => zoom,
+                                 :subject_width => subject_width,
+                                 :g_width => g_width
+                               })
 
         
         pdf.Line(15, top, subject_width+g_width, top)
@@ -914,29 +914,29 @@ module Redmine
       private
 
       # Helper methods to draw the pdf.
-      def pdf_tasks(pdf, options = {})
+      def pdf_subjects_and_lines(pdf, options = {})
         subject_options = {:indent => 0, :indent_increment => 5, :top_increment => 3, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
         line_options = {:indent => 0, :indent_increment => 5, :top_increment => 3, :render => :line, :format => :pdf, :pdf => pdf}.merge(options)
 
         if @project
-          tasks_subjects_for_project(@project, subject_options)
-          tasks_subjects_for_project(@project, line_options)
+          render_project(@project, subject_options)
+          render_project(@project, line_options)
         else
           Project.roots.each do |project|
-            tasks_subjects_for_project(project, subject_options)
-            tasks_subjects_for_project(project, line_options)
+            render_project(project, subject_options)
+            render_project(project, line_options)
           end
         end
       end
 
-      def image_tasks(gc, options = {})
+      def image_lines(gc, options = {})
         options = {:indent => 4, :render => :line, :format => :image, :image => gc}.merge(options)
 
         if @project
-          tasks_subjects_for_project(@project, options)
+          render_project(@project, options)
         else
           Project.roots.each do |project|
-            tasks_subjects_for_project(project, options)
+            render_project(project, options)
           end
         end
         
@@ -947,26 +947,14 @@ module Redmine
         options = {:indent => 4, :render => :subject, :format => :image, :image => gc}.merge(options)
 
         if @project
-          tasks_subjects_for_project(@project, options)
+          render_project(@project, options)
         else
           Project.roots.each do |project|
-            tasks_subjects_for_project(project, options)
+            render_project(project, options)
           end
         end
       end
 
-      def image_tasks(gc, options = {})
-        options = {:indent => 4, :render => :line, :format => :image, :image => gc}.merge(options)
-
-        if @project
-          tasks_subjects_for_project(@project, options)
-        else
-          Project.roots.each do |project|
-            tasks_subjects_for_project(project, options)
-          end
-        end
-        
-      end
 
     end
   end

@@ -88,23 +88,23 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
     end
   end
 
-  context "#tasks_subjects" do
+  context "#subjects" do
     should "be tested"
   end
 
-  context "#tasks_subjects_for_project" do
+  context "#lines" do
     should "be tested"
   end
 
-  context "#tasks_subjects_for_issues" do
+  context "#render_project" do
     should "be tested"
   end
 
-  context "#tasks_subjects_for_version" do
+  context "#render_issues" do
     should "be tested"
   end
 
-  context "#tasks" do
+  context "#render_version" do
     should "be tested"
   end
 

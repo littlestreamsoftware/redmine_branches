@@ -68,12 +68,10 @@ t_height = g_height + headers_height
 <div style="position:relative;height:<%= t_height + 24 %>px;width:<%= subject_width + 1 %>px;">
 <div style="right:-2px;width:<%= subject_width %>px;height:<%= headers_height %>px;background: #eee;" class="gantt_hdr"></div>
 <div style="right:-2px;width:<%= subject_width %>px;height:<%= t_height %>px;border-left: 1px solid #c0c0c0;overflow:hidden;" class="gantt_hdr"></div>
-<%
-#
-# Tasks subjects
-#
-top = headers_height + 8 %>
-<%= @gantt.tasks_subjects(:headers_height => headers_height, :top => top, :g_width => g_width) %>
+<% top = headers_height + 8 %>
+
+<%= @gantt.subjects(:headers_height => headers_height, :top => top, :g_width => g_width) %>
+
 </div>
 </td>
 <td>
@@ -151,12 +149,9 @@ if show_days
 	end
 end %>
 
-<%
-#
-# Tasks
-#
-top = headers_height + 10 %>
-<%= @gantt.tasks(:top => top, :zoom => zoom, :g_width => g_width ) %>
+<% top = headers_height + 10 %>
+
+<%= @gantt.lines(:top => top, :zoom => zoom, :g_width => g_width ) %>
 
 <%
 #
