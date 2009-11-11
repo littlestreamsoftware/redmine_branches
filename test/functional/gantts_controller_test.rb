@@ -17,10 +17,9 @@ class GanttsControllerTest < ActionController::TestCase
       # Issue with start and due dates
       i = Issue.find(1)
       assert_not_nil i.due_date
-      assert events.include?(Issue.find(1))
+      assert_select "div a.issue", /##{i.id}/
       # Issue with on a targeted version should not be in the events but loaded in the html
       i = Issue.find(2)
-      assert !events.include?(i)
       assert_select "div a.issue", /##{i.id}/
     end
 
@@ -29,8 +28,8 @@ class GanttsControllerTest < ActionController::TestCase
       assert_response :success
       assert_template 'show.html.erb'
       assert_not_nil assigns(:gantt)
-      events = assigns(:gantt).events
-      assert_not_nil events
+      assert_not_nil assigns(:gantt).query
+      assert_nil assigns(:gantt).project
     end
 
     should "export to pdf" do
