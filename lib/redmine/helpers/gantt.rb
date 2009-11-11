@@ -708,7 +708,7 @@ module Redmine
         gc = Magick::Draw.new
         
         # Subjects
-        image_subjects(gc, :top => (headers_heigth + 20), :indent => 0)
+        subjects(:image => gc, :top => (headers_heigth + 20), :indent => 4, :format => :image)
     
         # Months headers
         month_f = @date_from
@@ -786,7 +786,8 @@ module Redmine
             
         # content
         top = headers_heigth + 20
-        image_lines(gc, :top => top, :zoom => zoom, :subject_width => subject_width)
+        
+        lines(:image => gc, :top => top, :zoom => zoom, :subject_width => subject_width, :format => :image)
         
         # today red line
         if Date.today >= @date_from and Date.today <= date_to
@@ -928,33 +929,6 @@ module Redmine
           end
         end
       end
-
-      def image_lines(gc, options = {})
-        options = {:indent => 4, :render => :line, :format => :image, :image => gc}.merge(options)
-
-        if @project
-          render_project(@project, options)
-        else
-          Project.roots.each do |project|
-            render_project(project, options)
-          end
-        end
-        
-      end
-
-      # Helper methods to draw the image.
-      def image_subjects(gc, options = {})
-        options = {:indent => 4, :render => :subject, :format => :image, :image => gc}.merge(options)
-
-        if @project
-          render_project(@project, options)
-        else
-          Project.roots.each do |project|
-            render_project(project, options)
-          end
-        end
-      end
-
 
     end
   end
