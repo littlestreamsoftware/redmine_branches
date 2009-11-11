@@ -121,7 +121,8 @@ module Redmine
 
         count
       end
-      
+
+      # Renders the subjects of the Gantt chart, the left side.
       def subjects(options={})
         options = {:indent => 4, :render => :subject, :format => :html}.merge(options)
 
@@ -134,6 +135,22 @@ module Redmine
           end
         end
 
+        output
+      end
+
+      # Renders the lines of the Gantt chart, the right side
+      def lines(options)
+        options = {:indent => 4, :render => :line, :format => :html}.merge(options)
+        output = ''
+
+        if @project
+          output << render_project(@project, options)
+        else
+          Project.roots.each do |project|
+            output << render_project(project, options)
+          end
+        end
+        
         output
       end
 
@@ -221,21 +238,6 @@ module Redmine
           options[:indent] -= options[:indent_increment]
         end
 
-        output
-      end
-
-      def lines(options)
-        options = {:indent => 4, :render => :line, :format => :html}.merge(options)
-        output = ''
-
-        if @project
-          output << render_project(@project, options)
-        else
-          Project.roots.each do |project|
-            output << render_project(project, options)
-          end
-        end
-        
         output
       end
 
@@ -684,9 +686,6 @@ module Redmine
         end
       end
 
-      # END HTML
-
-      
       # Generates a gantt image
       # Only defined if RMagick is avalaible
       def to_image(format='PNG')
@@ -914,7 +913,8 @@ module Redmine
       
       private
 
-      # Helper methods to draw the pdf.
+      # Renders both the subjects and lines of the Gantt chart for the
+      # PDF format
       def pdf_subjects_and_lines(pdf, options = {})
         subject_options = {:indent => 0, :indent_increment => 5, :top_increment => 3, :render => :subject, :format => :pdf, :pdf => pdf}.merge(options)
         line_options = {:indent => 0, :indent_increment => 5, :top_increment => 3, :render => :line, :format => :pdf, :pdf => pdf}.merge(options)
