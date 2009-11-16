@@ -35,6 +35,9 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
 
   def setup
     @response = ActionController::TestResponse.new
+    # Fixtures
+    ProjectCustomField.delete_all
+    Project.destroy_all
   end
 
   def build_view
@@ -45,6 +48,14 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
     HTML::Document.new(@response.body)
   end
 
+  def create_gantt(project=Project.generate!)
+    @project = project
+    @gantt = Redmine::Helpers::Gantt.new
+    @gantt.project = @project
+    @gantt.query = Query.generate_default!(:project => @project)
+    @gantt.view = build_view
+  end
+  
   context "#number_of_rows" do
 
     context "with one project" do
@@ -59,14 +70,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
 
   context "#number_of_rows_on_project" do
     setup do
-      # Fixtures
-      ProjectCustomField.delete_all
-      Project.destroy_all
-      
-      @project = Project.generate!
-      @gantt = Redmine::Helpers::Gantt.new
-      @gantt.project = @project
-      @gantt.query = Query.generate_default!(:project => @project)
+      create_gantt
     end
     
     should "clear the @query.project so cross-project issues and versions can be counted" do
@@ -136,15 +140,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
 
   context "#subject_for_project" do
     setup do
-      # Fixtures
-      ProjectCustomField.delete_all
-      Project.destroy_all
-      
-      @project = Project.generate!
-      @gantt = Redmine::Helpers::Gantt.new
-      @gantt.project = @project
-      @gantt.query = Query.generate_default!(:project => @project)
-      @gantt.view = build_view
+      create_gantt
     end
     
     context ":html format" do
