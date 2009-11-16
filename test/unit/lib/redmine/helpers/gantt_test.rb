@@ -18,6 +18,32 @@
 require File.dirname(__FILE__) + '/../../../../test_helper'
 
 class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
+  # Utility methods and classes so assert_select can be used.
+  class GanttViewTest < ActionView::Base
+    include ApplicationHelper
+    include ActionView::Helpers::UrlHelper
+    include ActionView::Helpers::TextHelper
+    include ActionController::UrlWriter
+
+    def self.default_url_options
+      {:only_path => true }
+    end
+
+  end
+
+  include ActionController::Assertions::SelectorAssertions
+
+  def setup
+    @response = ActionController::TestResponse.new
+  end
+
+  def build_view
+    @view = GanttViewTest.new
+  end
+
+  def html_document
+    HTML::Document.new(@response.body)
+  end
 
   context "#number_of_rows" do
 
@@ -109,10 +135,38 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   end
 
   context "#subject_for_project" do
-    should "be tested"
+    setup do
+    # Fixtures
+      ProjectCustomField.delete_all
+      Project.destroy_all
+      
+      @project = Project.generate!
+      @gantt = Redmine::Helpers::Gantt.new
+      @gantt.project = @project
+      @gantt.query = Query.generate_default!(:project => @project)
+      @gantt.view = build_view
+    end
+    
+    context ":html format" do
+      should "add an absolute positioned div" do
+        @response.body = @gantt.subject_for_project(@project, {:format => :html})
+        assert_select "div[style*=absolute]"
+      end
+
+      should "use the indent option to move the div to the right"
+      should "style overdue projects"
+      should "include the project name"
+      should "include a link to the project"
+    end    
   end
 
   context "#line_for_project" do
+    context ":html format" do
+      context "todo line" do
+        should "start from the starting point on the left"
+        should "be the total width of the issue"
+      end
+    end
     should "be tested"
   end
 
