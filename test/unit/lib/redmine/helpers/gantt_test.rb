@@ -179,7 +179,10 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
       end
 
 
-    end    
+    end
+
+    should "test the PNG format"
+    should "test the PDF format"
   end
 
   context "#line_for_project" do
