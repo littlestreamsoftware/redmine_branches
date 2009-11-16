@@ -136,7 +136,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
 
   context "#subject_for_project" do
     setup do
-    # Fixtures
+      # Fixtures
       ProjectCustomField.delete_all
       Project.destroy_all
       
@@ -153,10 +153,32 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
         assert_select "div[style*=absolute]"
       end
 
-      should "use the indent option to move the div to the right"
-      should "style overdue projects"
-      should "include the project name"
-      should "include a link to the project"
+      should "use the indent option to move the div to the right" do
+        @response.body = @gantt.subject_for_project(@project, {:format => :html, :indent => 40})
+        assert_select "div[style*=left:40]"
+      end
+
+      should "include the project name" do
+        @response.body = @gantt.subject_for_project(@project, {:format => :html})
+        assert_select 'div', :text => /#{@project.name}/
+      end
+
+      should "include a link to the project" do
+        @response.body = @gantt.subject_for_project(@project, {:format => :html})
+        assert_select 'a[href=?]', Regexp.escape("/projects/#{@project.identifier}"), :text => /#{@project.name}/
+      end
+
+      should "style overdue projects" do
+        @project.enabled_module_names = [:issue_tracking]
+        @project.versions << Version.generate!(:effective_date => Date.yesterday)
+
+        assert @project.overdue?, "Need an overdue project for this test"
+        @response.body = @gantt.subject_for_project(@project, {:format => :html})
+
+        assert_select 'div span.project-overdue'
+      end
+
+
     end    
   end
 
