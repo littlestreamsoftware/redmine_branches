@@ -253,7 +253,52 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   end
 
   context "#subject_for_issue" do
-    should "be tested"
+    setup do
+      create_gantt
+      @project.enabled_module_names = [:issue_tracking]
+      @tracker = Tracker.generate!
+      @project.trackers << @tracker
+
+      @issue = Issue.generate!(:subject => "gantt#subject_for_issue",
+                               :tracker => @tracker,
+                               :project => @project,
+                               :start_date => 3.days.ago.to_date,
+                               :due_date => Date.yesterday)
+      @project.issues << @issue
+
+    end
+
+    context ":html format" do
+      should "add an absolute positioned div" do
+        @response.body = @gantt.subject_for_issue(@issue, {:format => :html})
+        assert_select "div[style*=absolute]"
+      end
+
+      should "use the indent option to move the div to the right" do
+        @response.body = @gantt.subject_for_issue(@issue, {:format => :html, :indent => 40})
+        assert_select "div[style*=left:40]"
+      end
+
+      should "include the issue subject" do
+        @response.body = @gantt.subject_for_issue(@issue, {:format => :html})
+        assert_select 'div', :text => /#{@issue.subject}/
+      end
+
+      should "include a link to the issue" do
+        @response.body = @gantt.subject_for_issue(@issue, {:format => :html})
+        assert_select 'a[href=?]', Regexp.escape("/issues/#{@issue.to_param}"), :text => /#{@tracker.name} ##{@issue.id}/
+      end
+
+      should "style overdue issues" do
+        assert @issue.overdue?, "Need an overdue issue for this test"
+        @response.body = @gantt.subject_for_issue(@issue, {:format => :html})
+
+        assert_select 'div span.issue-overdue'
+      end
+
+    end
+    should "test the PNG format"
+    should "test the PDF format"
   end
 
   context "#line_for_issue" do
