@@ -20,11 +20,12 @@ require File.dirname(__FILE__) + '/../../../../test_helper'
 class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   # Utility methods and classes so assert_select can be used.
   class GanttViewTest < ActionView::Base
-    include ApplicationHelper
     include ActionView::Helpers::UrlHelper
     include ActionView::Helpers::TextHelper
     include ActionController::UrlWriter
-
+    include ApplicationHelper
+    include ProjectsHelper
+    
     def self.default_url_options
       {:only_path => true }
     end
@@ -192,7 +193,59 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   end
 
   context "#subject_for_version" do
-    should "be tested"
+    setup do
+      create_gantt
+      @project.enabled_module_names = [:issue_tracking]
+      @tracker = Tracker.generate!
+      @project.trackers << @tracker
+      @version = Version.generate!(:effective_date => Date.yesterday)
+      @project.versions << @version
+
+      @project.issues << Issue.generate!(:fixed_version => @version,
+                                         :subject => "gantt#subject_for_version",
+                                         :tracker => @tracker,
+                                         :project => @project,
+                                         :start_date => Date.today)
+
+    end
+
+    context ":html format" do
+      should "add an absolute positioned div" do
+        @response.body = @gantt.subject_for_version(@version, {:format => :html})
+        assert_select "div[style*=absolute]"
+      end
+
+      should "use the indent option to move the div to the right" do
+        @response.body = @gantt.subject_for_version(@version, {:format => :html, :indent => 40})
+        assert_select "div[style*=left:40]"
+      end
+
+      should "include the version name" do
+        @response.body = @gantt.subject_for_version(@version, {:format => :html})
+        assert_select 'div', :text => /#{@version.name}/
+      end
+
+      should "include a link to the version" do
+        @response.body = @gantt.subject_for_version(@version, {:format => :html})
+        assert_select 'a[href=?]', Regexp.escape("/versions/show/#{@version.to_param}"), :text => /#{@version.name}/
+      end
+
+      should "style late versions" do
+        assert @version.late?, "Need an overdue version for this test"
+        @response.body = @gantt.subject_for_version(@version, {:format => :html})
+
+        assert_select 'div span.version_late'
+      end
+
+      should "style behind schedule versions" do
+        assert @version.behind_schedule?, "Need a behind schedule version for this test"
+        @response.body = @gantt.subject_for_version(@version, {:format => :html})
+
+        assert_select 'div span.version_behind_schedule'
+      end
+    end
+    should "test the PNG format"
+    should "test the PDF format"
   end
 
   context "#line_for_version" do
