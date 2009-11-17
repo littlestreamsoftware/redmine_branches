@@ -49,12 +49,15 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
     HTML::Document.new(@response.body)
   end
 
+  # Creates a Gantt chart for a 4 week span
   def create_gantt(project=Project.generate!)
     @project = project
     @gantt = Redmine::Helpers::Gantt.new
     @gantt.project = @project
     @gantt.query = Query.generate_default!(:project => @project)
     @gantt.view = build_view
+    @gantt.instance_variable_set('@date_from', 2.weeks.ago.to_date)
+    @gantt.instance_variable_set('@date_to', 2.weeks.from_now.to_date)
   end
   
   context "#number_of_rows" do
@@ -183,13 +186,114 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   end
 
   context "#line_for_project" do
+    setup do
+      create_gantt
+      @project.enabled_module_names = [:issue_tracking]
+      @tracker = Tracker.generate!
+      @project.trackers << @tracker
+      @version = Version.generate!(:effective_date => Date.yesterday)
+      @project.versions << @version
+
+      @project.issues << Issue.generate!(:fixed_version => @version,
+                                         :subject => "gantt#line_for_project",
+                                         :tracker => @tracker,
+                                         :project => @project,
+                                         :done_ratio => 30,
+                                         :start_date => Date.yesterday,
+                                         :due_date => 1.week.from_now.to_date)
+    end
+
     context ":html format" do
       context "todo line" do
-        should "start from the starting point on the left"
-        should "be the total width of the issue"
+        should "start from the starting point on the left" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project_todo[style*=left:52px]"
+        end
+
+        should "be the total width of the project" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project_todo[style*=width:31px]"
+        end
+
+      end
+
+      context "late line" do
+        should "start from the starting point on the left" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project_late[style*=left:52px]"
+        end
+
+        should "be the total delayed width of the project" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project_late[style*=width:6px]"
+        end
+      end
+
+      context "done line" do
+        should "start from the starting point on the left" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project_done[style*=left:52px]"
+        end
+
+        should "Be the total done width of the project"  do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project_done[style*=left:52px]"
+        end
+      end
+
+      context "starting marker" do
+        should "not appear if the starting point is off the gantt chart" do
+          # Shift the date range of the chart
+          @gantt.instance_variable_set('@date_from', Date.today)
+
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project-line.starting", false
+        end
+
+        should "appear at the starting point" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project-line.starting[style*=left:52px]"
+        end
+      end
+
+      context "ending marker" do
+        should "not appear if the starting point is off the gantt chart" do
+          # Shift the date range of the chart
+          @gantt.instance_variable_set('@date_to', 2.weeks.ago.to_date)
+
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project-line.ending", false
+
+        end
+
+        should "appear at the end of the date range" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project-line.ending[style*=left:96px]"
+        end
+      end
+      
+      context "status content" do
+        should "appear at the far left, even if it's far in the past" do
+          @gantt.instance_variable_set('@date_to', 2.weeks.ago.to_date)
+
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project-name", /#{@project.name}/
+        end
+
+        should "show the project name" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project-name", /#{@project.name}/
+        end
+
+        should "show the percent complete" do
+          @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
+          assert_select "div.project-name", /0%/
+        end
       end
     end
-    should "be tested"
+
+    should "test the PNG format"
+    should "test the PDF format"
   end
 
   context "#subject_for_version" do

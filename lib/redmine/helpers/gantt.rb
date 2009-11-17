@@ -280,6 +280,10 @@ module Redmine
       def line_for_project(project, options)
         # Skip versions that don't have a start_date
         if project.is_a?(Project) && project.start_date
+          options[:zoom] ||= 1
+          options[:g_width] ||= (self.date_to - self.date_from + 1) * options[:zoom]
+
+          
           case options[:format]
           when :html
             output = ''
@@ -308,6 +312,7 @@ module Redmine
             if i_end > 0 && i_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ i_width }px;' class='task project_todo'>&nbsp;</div>"
             end
+            
             if l_width > 0 && i_left <= options[:g_width]
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:#{ l_width }px;' class='task project_late'>&nbsp;</div>"
             end
@@ -317,21 +322,25 @@ module Redmine
 
             
             # Starting diamond
-            if start_left <= options[:g_width]
-              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task project-line'>&nbsp;</div>"
+            if start_left <= options[:g_width] && start_left > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task project-line starting'>&nbsp;</div>"
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left + 12 }px;' class='task label'>"
               output << "</div>"
             end
 
             # Ending diamond
             # Don't show items too far ahead
+            if i_end <= options[:g_width] && i_end > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_end + 12 }px;width:15px;' class='task project-line ending'>&nbsp;</div>"
+            end
+
+            # DIsplay the Project name and %
             if i_end <= options[:g_width]
               # Display the status even if it's floated off to the left
               status_px = i_end + 12
               status_px = 0 if status_px <= 0
-              
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;width:15px;' class='task project-line'>&nbsp;</div>" unless status_px == 0 # don't draw marker at 0
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label'>"
+
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label project-name'>"
               output << "<strong>#{h project } #{h project.completed_percent(:include_subprojects => true).to_i.to_s}%</strong>"
               output << "</div>"
             end
