@@ -123,8 +123,56 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
     end
   end
 
+  # TODO: more of an integration test
   context "#subjects" do
-    should "be tested"
+    setup do
+      create_gantt
+      @project.enabled_module_names = [:issue_tracking]
+      @tracker = Tracker.generate!
+      @project.trackers << @tracker
+      @version = Version.generate!(:effective_date => 1.week.from_now.to_date)
+      @project.versions << @version
+      @issue = Issue.generate!(:fixed_version => @version,
+                               :subject => "gantt#line_for_project",
+                               :tracker => @tracker,
+                               :project => @project,
+                               :done_ratio => 30,
+                               :start_date => Date.yesterday,
+                               :due_date => 1.week.from_now.to_date)
+      @project.issues << @issue
+
+      @response.body = @gantt.subjects
+    end
+
+    context "project" do
+      should "be rendered" do
+        assert_select "div.project-name a", /#{@project.name}/
+      end
+
+      should "have an indent of 4" do
+        assert_select "div.project-name[style*=left:4px]"
+      end
+    end
+
+    context "version" do
+      should "be rendered" do
+        assert_select "div.version-name a", /#{@version.name}/
+      end
+
+      should "be indented 24 (one level)" do
+        assert_select "div.version-name[style*=left:24px]"
+      end
+    end
+
+    context "issue" do
+      should "be rendered" do
+        assert_select "div.issue-subject", /#{@issue.subject}/
+      end
+
+      should "be indented 44 (two levels)" do
+        assert_select "div.issue-subject[style*=left:44px]"
+      end
+    end
   end
 
   context "#lines" do

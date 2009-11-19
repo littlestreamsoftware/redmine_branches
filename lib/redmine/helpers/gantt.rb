@@ -155,6 +155,7 @@ module Redmine
       end
 
       def render_project(project, options={})
+        options[:top] = 0 unless options.key? :top
         options[:indent_increment] = 20 unless options.key? :indent_increment
         options[:top_increment] = 20 unless options.key? :top_increment
 
@@ -246,7 +247,7 @@ module Redmine
         when :html
           output = ''
 
-          output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+          output << "<div class='project-name' style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if project.is_a? Project
             output << "<span class='icon icon-projects #{project.overdue? ? 'project-overdue' : ''}'>"
             output << view.link_to_project(project)
@@ -382,7 +383,7 @@ module Redmine
         case options[:format]
         when :html
           output = ''
-          output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+          output << "<div class='version-name' style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if version.is_a? Version
             output << "<span class='icon icon-package #{version.behind_schedule? ? 'version_behind_schedule' : ''} #{version.late? ? 'version_late' : ''}'>"
             output << view.link_to_version(version)
@@ -517,7 +518,7 @@ module Redmine
         case options[:format]
         when :html
           output = ''
-          output << "<div style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
+          output << "<div class='issue-subject' style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if issue.is_a? Issue
             output << "<span class='icon icon-issue #{issue.overdue? ? 'issue-overdue' : ''}'>"
             output << h("#{issue.project} -") unless @project && @project == issue.project
