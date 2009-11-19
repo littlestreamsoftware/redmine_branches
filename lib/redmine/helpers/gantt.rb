@@ -591,7 +591,7 @@ module Redmine
             status_px = i_left + i_width + 5
             status_px = 5 if status_px <= 0
             
-            output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='#{css} label'>"
+            output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='#{css} label issue-name'>"
             output << issue.status.name
             output << ' '
             output << (issue.done_ratio).to_i.to_s

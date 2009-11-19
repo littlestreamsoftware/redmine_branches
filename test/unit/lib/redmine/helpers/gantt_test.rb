@@ -25,6 +25,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
     include ActionController::UrlWriter
     include ApplicationHelper
     include ProjectsHelper
+    include IssuesHelper
     
     def self.default_url_options
       {:only_path => true }
@@ -513,7 +514,88 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   end
 
   context "#line_for_issue" do
-    should "be tested"
+    setup do
+      create_gantt
+      @project.enabled_module_names = [:issue_tracking]
+      @tracker = Tracker.generate!
+      @project.trackers << @tracker
+      @version = Version.generate!(:effective_date => 1.week.from_now.to_date)
+      @project.versions << @version
+      @issue = Issue.generate!(:fixed_version => @version,
+                               :subject => "gantt#line_for_project",
+                               :tracker => @tracker,
+                               :project => @project,
+                               :done_ratio => 30,
+                               :start_date => Date.yesterday,
+                               :due_date => 1.week.from_now.to_date)
+      @project.issues << @issue
+    end
+
+    context ":html format" do
+      context "todo line" do
+        should "start from the starting point on the left" do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.task_todo[style*=left:52px]"
+        end
+
+        should "be the total width of the issue" do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.task_todo[style*=width:34px]"
+        end
+
+      end
+
+      context "late line" do
+        should "start from the starting point on the left" do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.task_late[style*=left:52px]"
+        end
+
+        should "be the total delayed width of the issue" do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.task_late[style*=width:6px]"
+        end
+      end
+
+      context "done line" do
+        should "start from the starting point on the left" do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.task_done[style*=left:52px]"
+        end
+
+        should "Be the total done width of the issue"  do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.task_done[style*=left:52px]"
+        end
+      end
+
+      context "status content" do
+        should "appear at the far left, even if it's far in the past" do
+          @gantt.instance_variable_set('@date_to', 2.weeks.ago.to_date)
+
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.issue-name"
+        end
+
+        should "show the issue status" do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.issue-name", /#{@issue.status.name}/
+        end
+
+        should "show the percent complete" do
+          @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+          assert_select "div.issue-name", /30%/
+        end
+      end
+    end
+
+    should "have an issue tooltip" do
+      @response.body = @gantt.line_for_issue(@issue, {:format => :html, :zoom => 4})
+      assert_select "div.tooltip", /#{@issue.subject}/
+    end
+
+    should "test the PNG format"
+    should "test the PDF format"
   end
 
   context "#to_image" do
