@@ -139,7 +139,7 @@ module Redmine
       end
 
       # Renders the lines of the Gantt chart, the right side
-      def lines(options)
+      def lines(options={})
         options = {:indent => 4, :render => :line, :format => :html}.merge(options)
         output = ''
 

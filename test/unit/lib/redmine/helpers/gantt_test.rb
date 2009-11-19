@@ -176,7 +176,50 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
   end
 
   context "#lines" do
-    should "be tested"
+    setup do
+      create_gantt
+      @project.enabled_module_names = [:issue_tracking]
+      @tracker = Tracker.generate!
+      @project.trackers << @tracker
+      @version = Version.generate!(:effective_date => 1.week.from_now.to_date)
+      @project.versions << @version
+      @issue = Issue.generate!(:fixed_version => @version,
+                               :subject => "gantt#line_for_project",
+                               :tracker => @tracker,
+                               :project => @project,
+                               :done_ratio => 30,
+                               :start_date => Date.yesterday,
+                               :due_date => 1.week.from_now.to_date)
+      @project.issues << @issue
+
+      @response.body = @gantt.lines
+    end
+
+    context "project" do
+      should "be rendered" do
+        assert_select "div.project_todo"
+        assert_select "div.project-line.starting"
+        assert_select "div.project-line.ending"
+        assert_select "div.label.project-name", /#{@project.name}/
+      end
+    end
+
+    context "version" do
+      should "be rendered" do
+        assert_select "div.milestone_todo"
+        assert_select "div.milestone.starting"
+        assert_select "div.milestone.ending"
+        assert_select "div.label.version-name", /#{@version.name}/
+      end
+    end
+
+    context "issue" do
+      should "be rendered" do
+        assert_select "div.task_todo"
+        assert_select "div.label.issue-name", /#{@issue.done_ratio}/
+        assert_select "div.tooltip", /#{@issue.subject}/
+      end
+    end
   end
 
   context "#render_project" do
