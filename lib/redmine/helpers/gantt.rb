@@ -415,6 +415,9 @@ module Redmine
       def line_for_version(version, options)
         # Skip versions that don't have a start_date
         if version.is_a?(Version) && version.start_date
+          options[:zoom] ||= 1
+          options[:g_width] ||= (self.date_to - self.date_from + 1) * options[:zoom]
+
           case options[:format]
           when :html
             output = ''
@@ -435,6 +438,8 @@ module Redmine
             d_width = ((i_done_date - start_date)*options[:zoom]).floor - 2                     # done width
             l_width = i_late_date ? ((i_late_date - start_date+1)*options[:zoom]).floor - 2 : 0 # delay width
 
+            i_end = ((i_end_date - self.date_from) * options[:zoom]).floor # Ending pixel
+
             # Bar graphic
 
             # Make sure that negative i_left and i_width don't
@@ -451,21 +456,25 @@ module Redmine
 
             
             # Starting diamond
-            if start_left <= options[:g_width]
-              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task milestone'>&nbsp;</div>"
+            if start_left <= options[:g_width] && start_left > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ start_left }px;width:15px;' class='task milestone starting'>&nbsp;</div>"
               output << "<div style='top:#{ options[:top] }px;left:#{ start_left + 12 }px;background:#fff;' class='task'>"
               output << "</div>"
             end
 
             # Ending diamond
             # Don't show items too far ahead
-            if i_left <= options[:g_width]
+            if i_left <= options[:g_width] && i_end > 0
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_end + 12 }px;width:15px;' class='task milestone ending'>&nbsp;</div>"
+            end
+
+            # Display the Version name and %
+            if i_end <= options[:g_width]
               # Display the status even if it's floated off to the left
-              status_px = i_left + 12
+              status_px = i_end + 12
               status_px = 0 if status_px <= 0
               
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;width:15px;' class='task milestone'>&nbsp;</div>" unless status_px == 0 # don't draw marker at 0
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label version-name'>"
               output << h("#{version.project} -") unless @project && @project == version.project
               output << "<strong>#{h version } #{h version.completed_pourcent.to_i.to_s}%</strong>"
               output << "</div>"
