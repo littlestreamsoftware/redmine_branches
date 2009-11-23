@@ -25,7 +25,9 @@ class ApplicationController < ActionController::Base
   
   before_filter :user_setup, :check_if_login_required, :set_localization
   filter_parameter_logging :password
+  protect_from_forgery
   
+  include Redmine::Search::Controller
   include Redmine::MenuManager::MenuController
   helper Redmine::MenuManager::MenuHelper
   
@@ -59,12 +61,12 @@ class ApplicationController < ActionController::Base
   
   # Sets the logged in user
   def logged_user=(user)
+    reset_session
     if user && user.is_a?(User)
       User.current = user
       session[:user_id] = user.id
     else
       User.current = User.anonymous
-      session[:user_id] = nil
     end
   end
   
@@ -92,7 +94,13 @@ class ApplicationController < ActionController::Base
   
   def require_login
     if !User.current.logged?
-      redirect_to :controller => "account", :action => "login", :back_url => url_for(params)
+      # Extract only the basic url parameters on non-GET requests
+      if request.get?
+        url = url_for(params)
+      else
+        url = url_for(:controller => params[:controller], :action => params[:action], :id => params[:id], :project_id => params[:project_id])
+      end
+      redirect_to :controller => "account", :action => "login", :back_url => url
       return false
     end
     true
