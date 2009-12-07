@@ -520,7 +520,14 @@ module Redmine
           output = ''
           output << "<div class='issue-subject' style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if issue.is_a? Issue
-            output << "<span class='icon icon-issue #{issue.overdue? ? 'issue-overdue' : ''}'>"
+            css_classes = []
+            css_classes << 'issue-overdue' if issue.overdue?
+            css_classes << 'icon icon-issue' unless Setting.gravatar_enabled? && issue.assigned_to
+
+            if issue.assigned_to.present?
+              output << view.avatar(issue.assigned_to, :class => 'gravatar icon-gravatar', :size => 10)
+            end
+            output << "<span class='#{css_classes.join(' ')}'>"
             output << h("#{issue.project} -") unless @project && @project == issue.project
             output << view.link_to_issue(issue)
             output << ":"

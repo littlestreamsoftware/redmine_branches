@@ -908,6 +908,12 @@ td.username img.gravatar {
 	margin: 0 1em 1em 0;
 }
 
+/* Used on 12px Gravatar img tags without the icon background */
+.icon-gravatar {
+  float: left;
+  margin-right: 4px;
+}
+
 #activity dt,
 .journal {
 	clear: left;
