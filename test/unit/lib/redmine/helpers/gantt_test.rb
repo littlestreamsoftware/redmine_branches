@@ -363,7 +363,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
 
         should "appear at the end of the date range" do
           @response.body = @gantt.line_for_project(@project, {:format => :html, :zoom => 4})
-          assert_select "div.project-line.ending[style*=left:96px]"
+          assert_select "div.project-line.ending[style*=left:84px]"
         end
       end
       
@@ -530,7 +530,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
 
         should "appear at the end of the date range" do
           @response.body = @gantt.line_for_version(@version, {:format => :html, :zoom => 4})
-          assert_select "div.milestone.ending[style*=left:96px]"
+          assert_select "div.milestone.ending[style*=left:84px]"
         end
       end
       

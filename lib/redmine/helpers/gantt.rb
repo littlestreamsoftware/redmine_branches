@@ -332,16 +332,16 @@ module Redmine
             # Ending diamond
             # Don't show items too far ahead
             if i_end <= options[:g_width] && i_end > 0
-              output << "<div style='top:#{ options[:top] }px;left:#{ i_end + 12 }px;width:15px;' class='task project-line ending'>&nbsp;</div>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_end }px;width:15px;' class='task project-line ending'>&nbsp;</div>"
             end
 
             # DIsplay the Project name and %
             if i_end <= options[:g_width]
               # Display the status even if it's floated off to the left
-              status_px = i_end + 12
+              status_px = i_end + 12 # 12px for the diamond
               status_px = 0 if status_px <= 0
 
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label project-name'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label project-name'>"
               output << "<strong>#{h project } #{h project.completed_percent(:include_subprojects => true).to_i.to_s}%</strong>"
               output << "</div>"
             end
@@ -466,16 +466,16 @@ module Redmine
             # Ending diamond
             # Don't show items too far ahead
             if i_left <= options[:g_width] && i_end > 0
-              output << "<div style='top:#{ options[:top] }px;left:#{ i_end + 12 }px;width:15px;' class='task milestone ending'>&nbsp;</div>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ i_end }px;width:15px;' class='task milestone ending'>&nbsp;</div>"
             end
 
             # Display the Version name and %
             if i_end <= options[:g_width]
               # Display the status even if it's floated off to the left
-              status_px = i_end + 12
+              status_px = i_end + 12 # 12px for the diamond
               status_px = 0 if status_px <= 0
               
-              output << "<div style='top:#{ options[:top] }px;left:#{ status_px + 10 }px;' class='task label version-name'>"
+              output << "<div style='top:#{ options[:top] }px;left:#{ status_px }px;' class='task label version-name'>"
               output << h("#{version.project} -") unless @project && @project == version.project
               output << "<strong>#{h version } #{h version.completed_pourcent.to_i.to_s}%</strong>"
               output << "</div>"
