@@ -86,10 +86,6 @@ class Version < ActiveRecord::Base
     end
   end
   
-  def late?
-    !completed? && !due_date.nil? && (due_date <= Date.today)
-  end
-  
   # Returns the completion percentage of this version based on the amount of open/closed issues
   # and the time spent on the open issues.
   def completed_pourcent

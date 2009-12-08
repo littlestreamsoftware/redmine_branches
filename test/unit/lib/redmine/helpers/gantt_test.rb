@@ -427,17 +427,17 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
       end
 
       should "style late versions" do
-        assert @version.late?, "Need an overdue version for this test"
+        assert @version.overdue?, "Need an overdue version for this test"
         @response.body = @gantt.subject_for_version(@version, {:format => :html})
 
-        assert_select 'div span.version_late'
+        assert_select 'div span.version-behind-schedule'
       end
 
       should "style behind schedule versions" do
         assert @version.behind_schedule?, "Need a behind schedule version for this test"
         @response.body = @gantt.subject_for_version(@version, {:format => :html})
 
-        assert_select 'div span.version_behind_schedule'
+        assert_select 'div span.version-behind-schedule'
       end
     end
     should "test the PNG format"

@@ -385,7 +385,7 @@ module Redmine
           output = ''
           output << "<div class='version-name' style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if version.is_a? Version
-            output << "<span class='icon icon-package #{version.behind_schedule? ? 'version_behind_schedule' : ''} #{version.late? ? 'version_late' : ''}'>"
+            output << "<span class='icon icon-package #{version.behind_schedule? ? 'version-behind-schedule' : ''} #{version.overdue? ? 'version-overdue' : ''}'>"
             output << view.link_to_version(version)
             output << '</span>'
           else
@@ -522,6 +522,7 @@ module Redmine
           if issue.is_a? Issue
             css_classes = []
             css_classes << 'issue-overdue' if issue.overdue?
+            css_classes << 'issue-behind-schedule' if issue.behind_schedule?
             css_classes << 'icon icon-issue' unless Setting.gravatar_enabled? && issue.assigned_to
 
             if issue.assigned_to.present?

@@ -154,7 +154,7 @@ class VersionTest < ActiveSupport::TestCase
     end
   end
 
-  context "#late?" do
+  context "#behind_schedule?" do
     setup do
       ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
       @project = Project.generate!(:identifier => 'test0')
@@ -170,25 +170,25 @@ class VersionTest < ActiveSupport::TestCase
       should "be false if there is no due_date" do
         version = Version.generate!(:effective_date => nil,
                                     :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal false, version.late?
+        assert_equal false, version.behind_schedule?
       end
 
       should "be false if the due_date is after today" do
         version = Version.generate!(:effective_date => 7.days.from_now.to_date,
                                     :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal false, version.late?
+        assert_equal false, version.behind_schedule?
       end
 
       should "be true if the due_date is today" do
         version = Version.generate!(:effective_date => Date.today,
                                     :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal true, version.late?
+        assert_equal true, version.behind_schedule?
       end
 
       should "be true if the due_date is before today" do
         version = Version.generate!(:effective_date => 3.days.ago.to_date,
                                     :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal true, version.late?
+        assert_equal true, version.behind_schedule?
       end
     end
   end
