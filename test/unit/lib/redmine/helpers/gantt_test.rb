@@ -40,6 +40,8 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
     # Fixtures
     ProjectCustomField.delete_all
     Project.destroy_all
+
+    User.current = User.find(1)
   end
 
   def build_view
@@ -60,7 +62,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
     @gantt.instance_variable_set('@date_from', 2.weeks.ago.to_date)
     @gantt.instance_variable_set('@date_to', 2.weeks.from_now.to_date)
   end
-  
+
   context "#number_of_rows" do
 
     context "with one project" do
@@ -130,8 +132,9 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
       @project.enabled_module_names = [:issue_tracking]
       @tracker = Tracker.generate!
       @project.trackers << @tracker
-      @version = Version.generate!(:effective_date => 1.week.from_now.to_date)
+      @version = Version.generate!(:effective_date => 1.week.from_now.to_date, :shared => 'none')
       @project.versions << @version
+
       @issue = Issue.generate!(:fixed_version => @version,
                                :subject => "gantt#line_for_project",
                                :tracker => @tracker,
