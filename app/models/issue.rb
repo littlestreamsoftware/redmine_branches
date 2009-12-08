@@ -100,7 +100,10 @@ class Issue < ActiveRecord::Base
         # reassign to the category with same name if any
         new_category = issue.category.nil? ? nil : new_project.issue_categories.find_by_name(issue.category.name)
         issue.category = new_category
-        issue.fixed_version = nil
+        # Keep the fixed_version if it's still valid in the new_project
+        unless new_project.shared_versions.include?(issue.fixed_version)
+          issue.fixed_version = nil
+        end
         issue.project = new_project
       end
       if new_tracker
@@ -108,7 +111,15 @@ class Issue < ActiveRecord::Base
       end
       if options[:copy]
         issue.custom_field_values = self.custom_field_values.inject({}) {|h,v| h[v.custom_field_id] = v.value; h}
-        issue.status = self.status
+        issue.status = if options[:attributes] && options[:attributes][:status_id]
+                         IssueStatus.find_by_id(options[:attributes][:status_id])
+                       else
+                         self.status
+                       end
+      end
+      # Allow bulk setting of attributes on the issue
+      if options[:attributes]
+        issue.attributes = options[:attributes]
       end
       if issue.save
         unless options[:copy]
@@ -126,6 +137,11 @@ class Issue < ActiveRecord::Base
   def priority_id=(pid)
     self.priority = nil
     write_attribute(:priority_id, pid)
+  end
+
+  def tracker_id=(tid)
+    self.tracker = nil
+    write_attribute(:tracker_id, tid)
   end
   
   def estimated_hours=(h)
@@ -152,10 +168,13 @@ class Issue < ActiveRecord::Base
         errors.add_to_base I18n.t(:error_can_not_reopen_issue_on_closed_version)
       end
     end
-  end
-  
-  def validate_on_create
-    errors.add :tracker_id, :invalid unless project.trackers.include?(tracker)
+    
+    # Checks that the issue can not be added/moved to a disabled tracker
+    if project && (tracker_id_changed? || project_id_changed?)
+      unless project.trackers.include?(tracker)
+        errors.add :tracker_id, :inclusion
+      end
+    end
   end
   
   def before_create
@@ -226,7 +245,7 @@ class Issue < ActiveRecord::Base
   
   # Versions that the issue can be assigned to
   def assignable_versions
-    @assignable_versions ||= (project.versions.open + [Version.find_by_id(fixed_version_id_was)]).compact.uniq.sort
+    @assignable_versions ||= (project.shared_versions.open + [Version.find_by_id(fixed_version_id_was)]).compact.uniq.sort
   end
   
   # Returns true if this issue is blocked by another issue that is still open
@@ -242,13 +261,23 @@ class Issue < ActiveRecord::Base
     blocked? ? statuses.reject {|s| s.is_closed?} : statuses
   end
   
-  # Returns the mail adresses of users that should be notified for the issue
+  # Returns the mail adresses of users that should be notified
   def recipients
-    recipients = project.recipients
+    notified = project.notified_users
     # Author and assignee are always notified unless they have been locked
-    recipients << author.mail if author && author.active?
-    recipients << assigned_to.mail if assigned_to && assigned_to.active?
-    recipients.compact.uniq
+    notified << author if author && author.active?
+    notified << assigned_to if assigned_to && assigned_to.active?
+    notified.uniq!
+    # Remove users that can not view the issue
+    notified.reject! {|user| !visible?(user)}
+    notified.collect(&:mail)
+  end
+  
+  # Returns the mail adresses of watchers that should be notified
+  def watcher_recipients
+    notified = watcher_users
+    notified.reject! {|user| !user.active? || !visible?(user)}
+    notified.collect(&:mail)
   end
   
   # Returns the total number of hours spent on this issue.
@@ -309,6 +338,23 @@ class Issue < ActiveRecord::Base
     s << ' created-by-me' if User.current.logged? && author_id == User.current.id
     s << ' assigned-to-me' if User.current.logged? && assigned_to_id == User.current.id
     s
+  end
+
+  # Update all issues so their versions are not pointing to a
+  # fixed_version that is outside of the issue's project hierarchy.
+  #
+  # OPTIMIZE: does a full table scan of Issues with a fixed_version.
+  def self.update_fixed_versions_from_sharing_change(conditions=nil)
+    Issue.all(:conditions => merge_conditions('fixed_version_id IS NOT NULL', conditions),
+              :include => [:project, :fixed_version]
+              ).each do |issue|
+      next if issue.project.nil? || issue.fixed_version.nil?
+      unless issue.project.shared_versions.include?(issue.fixed_version)
+        issue.init_journal(User.current)
+        issue.fixed_version = nil
+        issue.save
+      end
+    end
   end
   
   private
