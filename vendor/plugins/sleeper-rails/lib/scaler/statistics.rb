@@ -16,6 +16,7 @@ module Scaler
 	  
 	    unless $0 =~ /ApplicationSpawner/ then
 	      @thread = fire_upload_thread!
+				ENV['SLEEPER-UPLOAD-THREAD'] = @thread.inspect
 	      @thread.abort_on_exception=true
       end
     end
@@ -63,7 +64,7 @@ module Scaler
     def gather_host_data
       @data[:load_average] = Scaler::HostStats.load_average
       @data[:free_memory] = Scaler::HostStats.free_memory
-			@data[:version] = '0.1'
+			@data[:version] = Scaler::VERSION
     end
     
 	# Thread-related goodies
