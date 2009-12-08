@@ -526,7 +526,8 @@ module Redmine
             css_classes << 'icon icon-issue' unless Setting.gravatar_enabled? && issue.assigned_to
 
             if issue.assigned_to.present?
-              output << view.avatar(issue.assigned_to, :class => 'gravatar icon-gravatar', :size => 10)
+              assigned_string = l(:field_assigned_to) + ": " + issue.assigned_to.name
+              output << view.avatar(issue.assigned_to, :class => 'gravatar icon-gravatar', :size => 10, :title => assigned_string)
             end
             output << "<span class='#{css_classes.join(' ')}'>"
             output << h("#{issue.project} -") unless @project && @project == issue.project
