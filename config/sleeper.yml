@@ -1,5 +1,5 @@
 --- 
 :config_update_time: 600
 :debug: false
-:client_key: ENV['SLEEPER_KEY']
+:client_key: <%= ENV['SLEEPER_KEY'] %>
 :update_time: 60
