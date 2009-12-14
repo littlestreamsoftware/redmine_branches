@@ -51,7 +51,7 @@
 </div>
 
 
-<% principals = Principal.active.find(:all, :limit => 100, :order => 'type, login, lastname ASC') - @project.principals %>
+<% principals = Principal.active.find(:all, :order => 'type, login, lastname ASC') - @project.principals %>
 
 <div class="splitcontentright">
 <% if roles.any? && principals.any? %>
