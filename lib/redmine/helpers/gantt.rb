@@ -531,7 +531,6 @@ module Redmine
               output << view.avatar(issue.assigned_to, :class => 'gravatar icon-gravatar', :size => 10, :title => assigned_string)
             end
             output << "<span class='#{css_classes.join(' ')}'>"
-            output << h("#{issue.project} -") unless @project && @project == issue.project
             output << view.link_to_issue(issue)
             output << ":"
             output << h(issue.subject)
