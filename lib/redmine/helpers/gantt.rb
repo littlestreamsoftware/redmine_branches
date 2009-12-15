@@ -518,6 +518,7 @@ module Redmine
         case options[:format]
         when :html
           output = ''
+          output << "<div class='tooltip'>"
           output << "<div class='issue-subject' style='position: absolute;line-height:1.2em;height:16px;top:#{options[:top]}px;left:#{options[:indent]}px;overflow:hidden;'><small>    "
           if issue.is_a? Issue
             css_classes = []
@@ -540,6 +541,15 @@ module Redmine
             ''
           end
           output << "</small></div>"
+
+          # Tooltip
+          if issue.is_a? Issue
+            output << "<span class='tip' style='position: absolute;top:#{ options[:top].to_i + 16 }px;left:#{ options[:indent].to_i + 20 }px;'>"
+            output << view.render_issue_tooltip(issue)
+            output << "</span>"
+          end
+
+          output << "</div>"
           output
         when :image
           options[:image].fill('black')
