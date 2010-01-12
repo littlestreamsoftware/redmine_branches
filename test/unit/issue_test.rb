@@ -28,6 +28,8 @@ class IssueTest < ActiveSupport::TestCase
            :custom_fields, :custom_fields_projects, :custom_fields_trackers, :custom_values,
            :time_entries
 
+  should_belong_to :entered_by
+  
   def test_create
     issue = Issue.new(:project_id => 1, :tracker_id => 1, :author_id => 3, :status_id => 1, :priority => IssuePriority.all.first, :subject => 'test_create', :description => 'IssueTest#test_create', :estimated_hours => '1:30')
     assert issue.save
@@ -725,5 +727,24 @@ class IssueTest < ActiveSupport::TestCase
     issue.project = Project.find(2)
     assert issue.save
     assert_equal before, Issue.on_active_project.length
+  end
+
+  context "#set_entered_by" do
+    should "set the entered_by field with new issue creation" do
+      issue = Issue.new(:project_id => 1, :tracker_id => 1, :author_id => 3, :status_id => 1, :priority => IssuePriority.all.first, :subject => 'test_entered_by')
+      assert issue.save
+
+      assert_equal issue.author, issue.entered_by
+    end
+    
+    should "set the entered_by field for existing issues" do
+      issue = Issue.find(1)
+      assert_nil issue.entered_by
+
+      issue.subject = 'Change'
+      assert issue.save
+
+      assert_equal issue.author, issue.entered_by
+    end
   end
 end

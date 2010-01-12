@@ -20,6 +20,7 @@ class Issue < ActiveRecord::Base
   belongs_to :tracker
   belongs_to :status, :class_name => 'IssueStatus', :foreign_key => 'status_id'
   belongs_to :author, :class_name => 'User', :foreign_key => 'author_id'
+  belongs_to :entered_by, :class_name => 'User', :foreign_key => 'entered_by_id'
   belongs_to :assigned_to, :class_name => 'User', :foreign_key => 'assigned_to_id'
   belongs_to :fixed_version, :class_name => 'Version', :foreign_key => 'fixed_version_id'
   belongs_to :priority, :class_name => 'IssuePriority', :foreign_key => 'priority_id'
@@ -91,6 +92,7 @@ class Issue < ActiveRecord::Base
     }
   }
 
+  before_save :set_entered_by
   after_save :create_journal
   
   # Returns true if usr or current user is allowed to view the issue
@@ -849,5 +851,8 @@ class Issue < ActiveRecord::Base
                                               group by s.id, s.is_closed, j.id")
   end
   
-
+  # Sets the entered_by field to the author if it is nil
+  def set_entered_by
+    self.entered_by ||= self.author
+  end
 end
