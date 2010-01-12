@@ -404,6 +404,21 @@ class IssuesControllerTest < ActionController::TestCase
     assert_not_nil v
     assert_equal 'Value for field 2', v.value
   end
+
+  test 'POST to :create should allow setting the issue author' do
+    @request.session[:user_id] = 2
+    assert_difference 'Issue.count' do
+      post :create, :project_id => 1, 
+                 :issue => {:tracker_id => 3,
+                            :subject => 'This is the test_new issue',
+                            :author_login => 'dlopper'}
+    end
+    assert_redirected_to :controller => 'issues', :action => 'show', :id => Issue.last.id
+    
+    issue = Issue.find_by_subject('This is the test_new issue')
+    assert_not_nil issue
+    assert_equal 3, issue.author_id
+  end
   
   def test_post_create_and_continue
     @request.session[:user_id] = 2

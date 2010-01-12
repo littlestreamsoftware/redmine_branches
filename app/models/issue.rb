@@ -218,6 +218,17 @@ class Issue < ActiveRecord::Base
   def estimated_hours=(h)
     write_attribute :estimated_hours, (h.is_a?(String) ? h.to_hours : h)
   end
+
+  def author_login
+    @author.present? ? @author.login : nil
+  end
+
+  def author_login=(login)
+    if login && login != User.current.login && User.current.allowed_to?(:edit_issue_author, @project)
+      self.author = User.find_by_login(login)
+    end
+    self.author ||= User.current
+  end
   
   SAFE_ATTRIBUTES = %w(
     tracker_id

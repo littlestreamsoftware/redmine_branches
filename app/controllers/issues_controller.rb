@@ -463,7 +463,7 @@ private
       @issue.safe_attributes = params[:issue]
       @issue.watcher_user_ids = params[:issue]['watcher_user_ids'] if User.current.allowed_to?(:add_issue_watchers, @project)
     end
-    @issue.author = User.current
+    @issue.entered_by = User.current
     @issue.start_date ||= Date.today
     @priorities = IssuePriority.all
     @allowed_statuses = @issue.new_statuses_allowed_to(User.current, true)

@@ -18,7 +18,7 @@
 class UsersController < ApplicationController
   layout 'admin'
   
-  before_filter :require_admin, :except => :show
+  before_filter :require_admin, :except => [:show, :autocomplete]
 
   helper :sort
   include SortHelper
@@ -154,5 +154,10 @@ class UsersController < ApplicationController
       format.html { redirect_to :controller => 'users', :action => 'edit', :id => @user, :tab => 'memberships' }
       format.js { render(:update) {|page| page.replace_html "tab-content-memberships", :partial => 'users/memberships'} }
     end
+  end
+
+  def autocomplete
+    @users = User.active.like(params[:q]).all(:limit => 20)
+    render :layout => false
   end
 end
