@@ -952,17 +952,21 @@ class IssuesControllerTest < ActionController::TestCase
     post :bulk_edit, :ids => [1, 2], :notes => 'Bulk editing',
                                      :issue => {:priority_id => 7,
                                                 :assigned_to_id => '',
+                                                :author_login => 'dlopper',
                                                 :custom_field_values => {'2' => ''}}
                                      
     assert_response 302
     # check that the issues were updated
-    assert_equal [7, 7], Issue.find_all_by_id([1, 2]).collect {|i| i.priority.id}
+    updated_issues = Issue.find_all_by_id([1, 2])
+    assert_equal [7, 7], updated_issues.collect {|i| i.priority.id}
+    assert_equal [3, 3], updated_issues.collect {|i| i.author.id}
     
     issue = Issue.find(1)
     journal = issue.journals.find(:first, :order => 'created_on DESC')
     assert_equal '125', issue.custom_value_for(2).value
+    assert_equal 3, issue.author_id
     assert_equal 'Bulk editing', journal.notes
-    assert_equal 1, journal.details.size
+    assert_equal 2, journal.details.size
   end
 
   def test_bullk_edit_should_send_a_notification
