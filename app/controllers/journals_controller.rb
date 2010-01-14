@@ -17,10 +17,13 @@
 
 class JournalsController < ApplicationController
   before_filter :find_journal
+  helper :issues
   
   def edit
     if request.post?
-      @journal.update_attributes(:notes => params[:notes]) if params[:notes]
+      @journal.notes = params[:notes] if params[:notes]
+      @journal.user_login = params[:user_login] if params[:user_login].present?
+      @journal.save
       @journal.destroy if @journal.details.empty? && @journal.notes.blank?
       call_hook(:controller_journals_edit_post, { :journal => @journal, :params => params})
       respond_to do |format|

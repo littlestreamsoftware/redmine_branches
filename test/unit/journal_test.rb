@@ -20,6 +20,8 @@ require File.dirname(__FILE__) + '/../test_helper'
 class JournalTest < ActiveSupport::TestCase
   fixtures :issues, :issue_statuses, :journals, :journal_details
 
+  should_belong_to :entered_by
+
   def setup
     @journal = Journal.find 1
   end
