@@ -223,7 +223,7 @@ class Issue < ActiveRecord::Base
   end
 
   def author_login=(login)
-    if login && login != User.current.login && User.current.allowed_to?(:edit_issue_author, @project)
+    if login && User.current.allowed_to?(:edit_issue_author, @project)
       self.author = User.find_by_login(login)
     end
     self.author ||= User.current
