@@ -728,23 +728,4 @@ class IssueTest < ActiveSupport::TestCase
     assert issue.save
     assert_equal before, Issue.on_active_project.length
   end
-
-  context "#set_entered_by" do
-    should "set the entered_by field with new issue creation" do
-      issue = Issue.new(:project_id => 1, :tracker_id => 1, :author_id => 3, :status_id => 1, :priority => IssuePriority.all.first, :subject => 'test_entered_by')
-      assert issue.save
-
-      assert_equal issue.author, issue.entered_by
-    end
-    
-    should "set the entered_by field for existing issues" do
-      issue = Issue.find(1)
-      assert_nil issue.entered_by
-
-      issue.subject = 'Change'
-      assert issue.save
-
-      assert_equal issue.author, issue.entered_by
-    end
-  end
 end
