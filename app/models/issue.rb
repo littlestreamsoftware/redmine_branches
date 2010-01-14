@@ -229,6 +229,10 @@ class Issue < ActiveRecord::Base
     end
     self.author ||= User.current
   end
+
+  def entered_by_author?
+    self.author_id == self.entered_by_id
+  end
   
   SAFE_ATTRIBUTES = %w(
     tracker_id

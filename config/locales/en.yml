@@ -761,6 +761,7 @@ en:
   label_profile: Profile
   label_subtask_plural: Subtasks
   label_project_copy_notifications: Send email notifications during the project copy
+  label_entered_by: "(originally entered by {{who}})."
   
   button_login: Login
   button_submit: Submit
