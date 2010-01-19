@@ -20,6 +20,7 @@ class JournalsController < ApplicationController
   helper :issues
   
   def edit
+    @journal.indice = params[:indice]
     if request.post?
       @journal.notes = params[:notes] if params[:notes]
       @journal.user_login = params[:user_login] if params[:user_login].present?
