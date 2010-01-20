@@ -32,12 +32,13 @@ Redmine::AccessControl.map do |map|
   map.permission :select_project_modules, {:projects => :modules}, :require => :member
   map.permission :manage_members, {:projects => :settings, :members => [:new, :edit, :destroy, :autocomplete_for_member]}, :require => :member
   map.permission :manage_versions, {:projects => [:settings, :add_version], :versions => [:edit, :close_completed, :destroy]}, :require => :member
+  map.permission :add_subprojects, {:projects => :add}, :require => :member
   
   map.project_module :issue_tracking do |map|
     # Issue categories
     map.permission :manage_categories, {:projects => [:settings, :add_issue_category], :issue_categories => [:edit, :destroy]}, :require => :member
     # Issues
-    map.permission :view_issues, {:projects => [:changelog, :roadmap], 
+    map.permission :view_issues, {:projects => :roadmap, 
                                   :issues => [:index, :changes, :show, :context_menu],
                                   :versions => [:show, :status_by],
                                   :queries => :index,
@@ -152,7 +153,7 @@ Redmine::MenuManager.map :project_menu do |menu|
               :if => Proc.new { |p| p.wiki && !p.wiki.new_record? }
   menu.push :boards, { :controller => 'boards', :action => 'index', :id => nil }, :param => :project_id,
               :if => Proc.new { |p| p.boards.any? }, :caption => :label_board_plural
-  menu.push :files, { :controller => 'projects', :action => 'list_files' }, :caption => :label_attachment_plural
+  menu.push :files, { :controller => 'projects', :action => 'list_files' }, :caption => :label_file_plural
   menu.push :repository, { :controller => 'repositories', :action => 'show' },
               :if => Proc.new { |p| p.repository && !p.repository.new_record? }
   menu.push :settings, { :controller => 'projects', :action => 'settings' }, :last => true

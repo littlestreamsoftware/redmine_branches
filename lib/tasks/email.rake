@@ -27,6 +27,8 @@ General options:
                            ignore: email is ignored (default)
                            accept: accept as anonymous user
                            create: create a user account
+  no_permission_check=1    disable permission checking when receiving
+                           the email
   
 Issue attributes control options:
   project=PROJECT          identifier of the target project
@@ -55,6 +57,7 @@ END_DESC
       %w(project status tracker category priority).each { |a| options[:issue][a.to_sym] = ENV[a] if ENV[a] }
       options[:allow_override] = ENV['allow_override'] if ENV['allow_override']
       options[:unknown_user] = ENV['unknown_user'] if ENV['unknown_user']
+      options[:no_permission_check] = ENV['no_permission_check'] if ENV['no_permission_check']
       
       MailHandler.receive(STDIN.read, options)
     end
@@ -68,6 +71,8 @@ General options:
                            ignore: email is ignored (default)
                            accept: accept as anonymous user
                            create: create a user account
+  no_permission_check=1    disable permission checking when receiving
+                           the email
   
 Available IMAP options:
   host=HOST                IMAP server host (default: 127.0.0.1)
@@ -123,8 +128,42 @@ END_DESC
       %w(project status tracker category priority).each { |a| options[:issue][a.to_sym] = ENV[a] if ENV[a] }
       options[:allow_override] = ENV['allow_override'] if ENV['allow_override']
       options[:unknown_user] = ENV['unknown_user'] if ENV['unknown_user']
+      options[:no_permission_check] = ENV['no_permission_check'] if ENV['no_permission_check']
 
       Redmine::IMAP.check(imap_options, options)
+    end
+    
+    desc <<-END_DESC
+Read emails from an POP3 server.
+
+Available POP3 options:
+  host=HOST                POP3 server host (default: 127.0.0.1)
+  port=PORT                POP3 server port (default: 110)
+  username=USERNAME        POP3 account
+  password=PASSWORD        POP3 password
+  apop=1                   use APOP authentication (default: false)
+  delete_unprocessed=1     delete messages that could not be processed
+                           successfully from the server (default
+                           behaviour is to leave them on the server)
+
+See redmine:email:receive_imap for more options and examples.
+END_DESC
+    
+    task :receive_pop3 => :environment do
+      pop_options  = {:host => ENV['host'],
+                      :port => ENV['port'],
+                      :apop => ENV['apop'],
+                      :username => ENV['username'],
+                      :password => ENV['password'],
+                      :delete_unprocessed => ENV['delete_unprocessed']}
+                      
+      options = { :issue => {} }
+      %w(project status tracker category priority).each { |a| options[:issue][a.to_sym] = ENV[a] if ENV[a] }
+      options[:allow_override] = ENV['allow_override'] if ENV['allow_override']
+      options[:unknown_user] = ENV['unknown_user'] if ENV['unknown_user']
+      options[:no_permission_check] = ENV['no_permission_check'] if ENV['no_permission_check']
+      
+      Redmine::POP3.check(pop_options, options)
     end
   end
 end

@@ -137,6 +137,9 @@ ru:
         few:   "больше {{count}} лет"
         many:  "больше {{count}} лет"
         other: "больше {{count}} лет"
+      almost_x_years:
+        one:   "almost 1 year"
+        other: "almost {{count}} years"
     prompts:
       year: "Год"
       month: "Месяц"
@@ -319,7 +322,6 @@ ru:
   field_is_default: Значение по умолчанию
   field_is_filter: Используется в качестве фильтра
   field_is_for_all: Для всех проектов
-  field_is_in_chlog: Задачи, отображаемые в журнале изменений
   field_is_in_roadmap: Задачи, отображаемые в оперативном плане
   field_is_public: Общедоступный
   field_is_required: Обязательное
@@ -420,7 +422,6 @@ ru:
   label_calendar: Календарь
   label_calendar_filter: Включая
   label_calendar_no_assigned: не мои
-  label_change_log: Журнал изменений
   label_change_plural: Правки
   label_change_properties: Изменить свойства
   label_change_status: Изменить статус
@@ -949,12 +950,43 @@ ru:
   button_move_and_follow: Переместить и перейти
   setting_default_projects_modules: Включенные по умолчанию модули для новых проектов
   setting_gravatar_default: Изображение Gravatar по умолчанию
-  field_sharing: Sharing
-  label_version_sharing_hierarchy: With project hierarchy
-  label_version_sharing_system: With all projects
-  label_version_sharing_descendants: With subprojects
-  label_version_sharing_tree: With project tree
-  label_version_sharing_none: Not shared
-  error_can_not_archive_project: This project can not be archived
-  button_duplicate: Duplicate
-  button_copy_and_follow: Copy and follow
+  field_sharing: Совместное использование
+  label_version_sharing_hierarchy: С иерархией проектов
+  label_version_sharing_system: Со всеми проектами
+  label_version_sharing_descendants: С подпроектами
+  label_version_sharing_tree: С деревом проектов
+  label_version_sharing_none: Без совместного использования
+  error_can_not_archive_project: Этот проект не может быть архивирован
+  button_duplicate: Дублировать
+  button_copy_and_follow: Копировать и продолжить
+  label_copy_source: Источник
+  setting_issue_done_ratio:  Рассчитывать готовность задачи с помощью поля
+  setting_issue_done_ratio_issue_status: Статус задачи
+  error_issue_done_ratios_not_updated: Параметр готовность задач не обновлен
+  error_workflow_copy_target: Выберите целевые трекеры и роли
+  setting_issue_done_ratio_issue_field: Готовность задачи
+  label_copy_same_as_target: То же, что и у цели
+  label_copy_target: Цель
+  notice_issue_done_ratios_updated: Параметр готовность задач обновлен.
+  error_workflow_copy_source: Выберите исходный трекер или роль
+  label_update_issue_done_ratios: Обновить готовность задач
+  setting_start_of_week: День начала недели
+  label_api_access_key: Ключ доступа к API
+  text_line_separated: Разрешено несколько значений (по одному значению в строку).
+  label_revision_id: Ревизия {{value}}
+  permission_view_issues: Показать проблемы
+  label_display_used_statuses_only: Отображать только те статусы, которые используются в этом трекере
+  label_api_access_key_created_on: Ключ доступ к API был создан {{value}} назад
+  label_feeds_access_key: Ключ доступа к RSS
+  notice_api_access_key_reseted: Ваш ключ доступа к API был сброшен.
+  setting_rest_api_enabled: Включить веб-сервис REST
+  button_show: Показать
+  label_missing_api_access_key: Отсутствует ключ доступа к API
+  label_missing_feeds_access_key: Отсутствует ключ доступа к RSS
+  setting_mail_handler_body_delimiters: Урезать письмо после одной из этих строк
+  permission_add_subprojects: Создать подпроекты
+  label_subproject_new: Новый подпроект
+  text_own_membership_delete_confirmation: |-
+    Вы собираетесь удалить некоторые или все права, из-за чего могут пропасть права на редактирование этого проекта.
+    Продолжить?
+  label_close_versions: Закрыть завершенные версии

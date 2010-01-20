@@ -30,6 +30,10 @@ class MemberRole < ActiveRecord::Base
     errors.add :role_id, :invalid if role && !role.member?
   end
   
+  def inherited?
+    !inherited_from.nil?
+  end
+  
   private
   
   def remove_member_if_empty
@@ -49,6 +53,11 @@ class MemberRole < ActiveRecord::Base
   end
   
   def remove_role_from_group_users
-    MemberRole.find(:all, :conditions => { :inherited_from => id }).each(&:destroy)
+    MemberRole.find(:all, :conditions => { :inherited_from => id }).group_by(&:member).each do |member, member_roles|
+      member_roles.each(&:destroy)
+      if member && member.user
+        Watcher.prune(:user => member.user, :project => member.project)
+      end
+    end
   end
 end

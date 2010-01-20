@@ -23,6 +23,7 @@ class Project < ActiveRecord::Base
   # Specific overidden Activities
   has_many :time_entry_activities
   has_many :members, :include => [:user, :roles], :conditions => "#{User.table_name}.type='User' AND #{User.table_name}.status=#{User::STATUS_ACTIVE}"
+  has_many :memberships, :class_name => 'Member'
   has_many :member_principals, :class_name => 'Member', 
                                :include => :principal,
                                :conditions => "#{Principal.table_name}.type='Group' OR (#{Principal.table_name}.type='User' AND #{Principal.table_name}.status=#{User::STATUS_ACTIVE})"
@@ -246,7 +247,11 @@ class Project < ActiveRecord::Base
   # by the current user
   def allowed_parents
     return @allowed_parents if @allowed_parents
-    @allowed_parents = (Project.find(:all, :conditions => Project.allowed_to_condition(User.current, :add_project, :member => true)) - self_and_descendants)
+    @allowed_parents = Project.find(:all, :conditions => Project.allowed_to_condition(User.current, :add_subprojects))
+    @allowed_parents = @allowed_parents - self_and_descendants
+    if User.current.allowed_to?(:add_project, nil, :global => true)
+      @allowed_parents << nil
+    end
     unless parent.nil? || @allowed_parents.empty? || @allowed_parents.include?(parent)
       @allowed_parents << parent
     end
@@ -304,7 +309,7 @@ class Project < ActiveRecord::Base
         # move_to_child_of adds the project in last (ie.right) position
         move_to_child_of(p)
       end
-      Issue.update_fixed_versions_from_sharing_change
+      Issue.update_versions_from_hierarchy_change(self)
       true
     else
       # Can not move to the given target
@@ -529,6 +534,10 @@ class Project < ActiveRecord::Base
   
   # Copies issues from +project+
   def copy_issues(project)
+    # Stores the source issue id as a key and the copied issues as the
+    # value.  Used to map the two togeather for issue relations.
+    issues_map = {}
+    
     project.issues.each do |issue|
       new_issue = Issue.new
       new_issue.copy_from(issue)
@@ -543,15 +552,46 @@ class Project < ActiveRecord::Base
         new_issue.category = self.issue_categories.select {|c| c.name == issue.category.name}.first
       end
       self.issues << new_issue
+      issues_map[issue.id] = new_issue
+    end
+
+    # Relations after in case issues related each other
+    project.issues.each do |issue|
+      new_issue = issues_map[issue.id]
+      
+      # Relations
+      issue.relations_from.each do |source_relation|
+        new_issue_relation = IssueRelation.new
+        new_issue_relation.attributes = source_relation.attributes.dup.except("id", "issue_from_id", "issue_to_id")
+        new_issue_relation.issue_to = issues_map[source_relation.issue_to_id]
+        if new_issue_relation.issue_to.nil? && Setting.cross_project_issue_relations?
+          new_issue_relation.issue_to = source_relation.issue_to
+        end
+        new_issue.relations_from << new_issue_relation
+      end
+      
+      issue.relations_to.each do |source_relation|
+        new_issue_relation = IssueRelation.new
+        new_issue_relation.attributes = source_relation.attributes.dup.except("id", "issue_from_id", "issue_to_id")
+        new_issue_relation.issue_from = issues_map[source_relation.issue_from_id]
+        if new_issue_relation.issue_from.nil? && Setting.cross_project_issue_relations?
+          new_issue_relation.issue_from = source_relation.issue_from
+        end
+        new_issue.relations_to << new_issue_relation
+      end
     end
   end
 
   # Copies members from +project+
   def copy_members(project)
-    project.members.each do |member|
+    project.memberships.each do |member|
       new_member = Member.new
       new_member.attributes = member.attributes.dup.except("id", "project_id", "created_on")
-      new_member.role_ids = member.role_ids.dup
+      # only copy non inherited roles
+      # inherited roles will be added when copying the group membership
+      role_ids = member.member_roles.reject(&:inherited?).collect(&:role_id)
+      next if role_ids.empty?
+      new_member.role_ids = role_ids
       new_member.project = self
       self.members << new_member
     end
@@ -591,8 +631,8 @@ class Project < ActiveRecord::Base
 
   # Returns all the active Systemwide and project specific activities
   def active_activities
-    overridden_activity_ids = self.time_entry_activities.active.collect(&:parent_id)
-
+    overridden_activity_ids = self.time_entry_activities.collect(&:parent_id)
+    
     if overridden_activity_ids.empty?
       return TimeEntryActivity.shared.active
     else
@@ -622,7 +662,7 @@ class Project < ActiveRecord::Base
     else
       return TimeEntryActivity.shared.active.
         find(:all,
-             :conditions => ["id NOT IN (?)", self.time_entry_activities.active.collect(&:parent_id)]) +
+             :conditions => ["id NOT IN (?)", self.time_entry_activities.collect(&:parent_id)]) +
         self.time_entry_activities.active
     end
   end

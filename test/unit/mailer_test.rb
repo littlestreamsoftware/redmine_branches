@@ -20,7 +20,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 class MailerTest < ActiveSupport::TestCase
   include Redmine::I18n
   include ActionController::Assertions::SelectorAssertions
-  fixtures :projects, :issues, :users, :members, :member_roles, :documents, :attachments, :news, :tokens, :journals, :journal_details, :changesets, :trackers, :issue_statuses, :enumerations, :messages, :boards, :repositories
+  fixtures :projects, :enabled_modules, :issues, :users, :members, :member_roles, :roles, :documents, :attachments, :news, :tokens, :journals, :journal_details, :changesets, :trackers, :issue_statuses, :enumerations, :messages, :boards, :repositories
   
   def test_generated_links_in_emails
     ActionMailer::Base.deliveries.clear
@@ -147,7 +147,7 @@ class MailerTest < ActiveSupport::TestCase
   def test_message_posted_message_id
     ActionMailer::Base.deliveries.clear
     message = Message.find(1)
-    Mailer.deliver_message_posted(message, message.author.mail)
+    Mailer.deliver_message_posted(message)
     mail = ActionMailer::Base.deliveries.last
     assert_not_nil mail
     assert_equal Mailer.message_id_for(message), mail.message_id
@@ -157,11 +157,51 @@ class MailerTest < ActiveSupport::TestCase
   def test_reply_posted_message_id
     ActionMailer::Base.deliveries.clear
     message = Message.find(3)
-    Mailer.deliver_message_posted(message, message.author.mail)
+    Mailer.deliver_message_posted(message)
     mail = ActionMailer::Base.deliveries.last
     assert_not_nil mail
     assert_equal Mailer.message_id_for(message), mail.message_id
     assert_equal Mailer.message_id_for(message.parent), mail.references.first.to_s
+  end
+  
+  context("#issue_add") do
+    setup do
+      ActionMailer::Base.deliveries.clear
+      Setting.bcc_recipients = '1'
+      @issue = Issue.find(1) 
+    end
+    
+    should "notify project members" do
+      assert Mailer.deliver_issue_add(@issue)
+      assert last_email.bcc.include?('dlopper@somenet.foo')
+    end
+    
+    should "not notify project members that are not allow to view the issue" do
+      Role.find(2).remove_permission!(:view_issues)
+      assert Mailer.deliver_issue_add(@issue)
+      assert !last_email.bcc.include?('dlopper@somenet.foo')
+    end
+    
+    should "notify issue watchers" do
+      user = User.find(9)
+      # minimal email notification options
+      user.pref[:no_self_notified] = '1'
+      user.pref.save
+      user.mail_notification = false
+      user.save
+      
+      Watcher.create!(:watchable => @issue, :user => user)
+      assert Mailer.deliver_issue_add(@issue)
+      assert last_email.bcc.include?(user.mail)
+    end
+    
+    should "not notify watchers not allowed to view the issue" do
+      user = User.find(9)
+      Watcher.create!(:watchable => @issue, :user => user)
+      Role.non_member.remove_permission!(:view_issues)
+      assert Mailer.deliver_issue_add(@issue)
+      assert !last_email.bcc.include?(user.mail)
+    end
   end
   
   # test mailer methods for each language
@@ -211,7 +251,7 @@ class MailerTest < ActiveSupport::TestCase
     recipients = recipients.compact.uniq
     valid_languages.each do |lang|
       Setting.default_language = lang.to_s
-      assert Mailer.deliver_message_posted(message, recipients)
+      assert Mailer.deliver_message_posted(message)
     end
   end
   
@@ -255,5 +295,25 @@ class MailerTest < ActiveSupport::TestCase
     mail = ActionMailer::Base.deliveries.last
     assert mail.bcc.include?('dlopper@somenet.foo')
     assert mail.body.include?('Bug #3: Error 281 when updating a recipe')
+  end
+  
+  def last_email
+    mail = ActionMailer::Base.deliveries.last
+    assert_not_nil mail
+    mail
+  end
+  
+  def test_mailer_should_not_change_locale
+    Setting.default_language = 'en'
+    # Set current language to italian
+    set_language_if_valid 'it'
+    # Send an email to a french user
+    user = User.find(1)
+    user.language = 'fr'
+    Mailer.deliver_account_activated(user)
+    mail = ActionMailer::Base.deliveries.last
+    assert mail.body.include?('Votre compte')
+    
+    assert_equal :it, current_language
   end
 end

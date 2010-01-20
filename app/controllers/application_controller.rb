@@ -22,6 +22,7 @@ class ApplicationController < ActionController::Base
   include Redmine::I18n
 
   layout 'base'
+  exempt_from_layout 'builder'
   
   # Remove broken cookie after upgrade from 0.8.x (#4292)
   # See https://rails.lighthouseapp.com/projects/8994/tickets/3360
@@ -30,7 +31,8 @@ class ApplicationController < ActionController::Base
   def delete_broken_cookies
     if cookies['_redmine_session'] && cookies['_redmine_session'] !~ /--/
       cookies.delete '_redmine_session'    
-      redirect_to home_path and return false
+      redirect_to home_path
+      return false
     end
   end
   
@@ -69,9 +71,19 @@ class ApplicationController < ActionController::Base
     elsif params[:format] == 'atom' && params[:key] && accept_key_auth_actions.include?(params[:action])
       # RSS key authentication does not start a session
       User.find_by_rss_key(params[:key])
+    elsif Setting.rest_api_enabled? && ['xml', 'json'].include?(params[:format])
+      if params[:key].present? && accept_key_auth_actions.include?(params[:action])
+        # Use API key
+        User.find_by_api_key(params[:key])
+      else
+        # HTTP Basic, either username/password or API key/random
+        authenticate_with_http_basic do |username, password|
+          User.try_to_login(username, password) || User.find_by_api_key(username)
+        end
+      end
     end
   end
-  
+
   # Sets the logged in user
   def logged_user=(user)
     reset_session
@@ -113,7 +125,12 @@ class ApplicationController < ActionController::Base
       else
         url = url_for(:controller => params[:controller], :action => params[:action], :id => params[:id], :project_id => params[:project_id])
       end
-      redirect_to :controller => "account", :action => "login", :back_url => url
+      respond_to do |format|
+        format.html { redirect_to :controller => "account", :action => "login", :back_url => url }
+        format.atom { redirect_to :controller => "account", :action => "login", :back_url => url }
+        format.xml { head :unauthorized }
+        format.json { head :unauthorized }
+      end
       return false
     end
     true
@@ -166,7 +183,8 @@ class ApplicationController < ActionController::Base
         uri = URI.parse(back_url)
         # do not redirect user to another host or to the login or register page
         if (uri.relative? || (uri.host == request.host)) && !uri.path.match(%r{/(login|account/register)})
-          redirect_to(back_url) and return
+          redirect_to(back_url)
+          return
         end
       rescue URI::InvalidURIError
         # redirect to default
@@ -177,21 +195,41 @@ class ApplicationController < ActionController::Base
   
   def render_403
     @project = nil
-    render :template => "common/403", :layout => !request.xhr?, :status => 403
+    respond_to do |format|
+      format.html { render :template => "common/403", :layout => (request.xhr? ? false : 'base'), :status => 403 }
+      format.atom { head 403 }
+      format.xml { head 403 }
+      format.json { head 403 }
+    end
     return false
   end
     
   def render_404
-    render :template => "common/404", :layout => !request.xhr?, :status => 404
+    respond_to do |format|
+      format.html { render :template => "common/404", :layout => !request.xhr?, :status => 404 }
+      format.atom { head 404 }
+      format.xml { head 404 }
+      format.json { head 404 }
+    end
     return false
   end
   
   def render_error(msg)
-    flash.now[:error] = msg
-    render :text => '', :layout => !request.xhr?, :status => 500
+    respond_to do |format|
+      format.html { 
+        flash.now[:error] = msg
+        render :text => '', :layout => !request.xhr?, :status => 500
+      }
+      format.atom { head 500 }
+      format.xml { head 500 }
+      format.json { head 500 }
+    end
   end
   
   def invalid_authenticity_token
+    if api_request?
+      logger.error "Form authenticity token is missing or is invalid. API calls must include a proper Content-type header (text/xml or text/json)."
+    end
     render_error "Invalid form authenticity token."
   end
   
@@ -272,5 +310,9 @@ class ApplicationController < ActionController::Base
   # Returns a string that can be used as filename value in Content-Disposition header
   def filename_for_content_disposition(name)
     request.env['HTTP_USER_AGENT'] =~ %r{MSIE} ? ERB::Util.url_encode(name) : name
+  end
+  
+  def api_request?
+    %w(xml json).include? params[:format]
   end
 end

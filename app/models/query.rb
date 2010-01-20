@@ -186,6 +186,7 @@ class Query < ActiveRecord::Base
       user_values += project.users.sort.collect{|s| [s.name, s.id.to_s] }
     else
       # members of the user's projects
+      # OPTIMIZE: Is selecting from users per project (N+1)
       user_values += User.current.projects.collect(&:users).flatten.uniq.sort.collect{|s| [s.name, s.id.to_s] }
     end
     @available_filters["assigned_to_id"] = { :type => :list_optional, :order => 4, :values => user_values } unless user_values.empty?
@@ -231,7 +232,7 @@ class Query < ActiveRecord::Base
   
   def add_short_filter(field, expression)
     return unless expression
-    parms = expression.scan(/^(o|c|\!|\*)?(.*)$/).first
+    parms = expression.scan(/^(o|c|!\*|!|\*)?(.*)$/).first
     add_filter field, (parms[0] || "="), [parms[1] || ""]
   end
   
