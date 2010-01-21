@@ -119,6 +119,7 @@ class IssuesController < ApplicationController
     @changesets.reverse! if User.current.wants_comments_in_reverse_order?
     @allowed_statuses = @issue.new_statuses_allowed_to(User.current)
     @edit_allowed = User.current.allowed_to?(:edit_issues, @project)
+    @edit_allowed ||= User.current.allowed_to?(:edit_own_issues, @project) && @issue.author == User.current
     @priorities = IssuePriority.all
     @time_entry = TimeEntry.new
     respond_to do |format|
@@ -434,6 +435,8 @@ private
     @allowed_statuses = @issue.new_statuses_allowed_to(User.current)
     @priorities = IssuePriority.all
     @edit_allowed = User.current.allowed_to?(:edit_issues, @project)
+    @edit_allowed ||= User.current.allowed_to?(:edit_own_issues, @project) && @issue.author == User.current
+
     @time_entry = TimeEntry.new
     
     @notes = params[:notes]
