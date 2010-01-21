@@ -450,7 +450,7 @@ private
 
   # TODO: Refactor, lots of extra code in here
   def build_new_issue_from_params
-    @issue = Issue.new
+    @issue = Issue.new(:author_login => User.current.login)
     @issue.copy_from(params[:copy_from]) if params[:copy_from]
     @issue.project = @project
     # Tracker must be set before custom field values
