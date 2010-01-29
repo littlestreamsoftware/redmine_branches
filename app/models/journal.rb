@@ -39,6 +39,8 @@ class Journal < ActiveRecord::Base
                                               :conditions => "#{Journal.table_name}.journalized_type = 'Issue' AND" +
                                                              " (#{JournalDetail.table_name}.prop_key = 'status_id' OR #{Journal.table_name}.notes <> '')"}
   
+  before_create :set_entered_by
+
   def save(*args)
     # Do not save an empty journal
     (details.empty? && notes.blank?) ? false : super
@@ -80,5 +82,11 @@ class Journal < ActiveRecord::Base
 
   def entered_by_author?
     self.user_id == self.entered_by_id
+  end
+
+  private
+
+  def set_entered_by
+    self.entered_by_id = self.user_id
   end
 end
