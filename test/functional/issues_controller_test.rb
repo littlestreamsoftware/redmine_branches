@@ -868,6 +868,22 @@ class IssuesControllerTest < ActionController::TestCase
 
   end
 
+  test 'POST to :edit should allow setting the journal author' do
+    @request.session[:user_id] = 2
+    post :edit,
+         :id => 1,
+         :notes => 'A comment',
+         :user_login => 'dlopper'
+
+    assert_redirected_to :action => 'show', :id => '1'
+    
+    issue = Issue.find(1)
+    journal = issue.journals.last
+    assert_equal 'A comment', journal.notes
+    assert_equal User.find(3), journal.user, "Journal's user was not change"
+    assert_equal User.find(2), journal.entered_by, "Journal's entered by was not updated to the creator"
+  end
+
   context "POST to :edit as the issue author" do
     setup do
       # Allow Non-Members to change the status from Closed to Assigned

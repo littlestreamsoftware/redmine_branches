@@ -440,7 +440,8 @@ private
     @time_entry = TimeEntry.new
     
     @notes = params[:notes]
-    @issue.init_journal(User.current, @notes)
+    journal = @issue.init_journal(User.current, @notes)
+    journal.user_login = params[:user_login] if params[:user_login].present?
     # User can change issue attributes only if he has :edit permission or if a workflow transition is allowed
     if (@edit_allowed || !@allowed_statuses.empty?) && params[:issue]
       attrs = params[:issue].dup

@@ -3,16 +3,7 @@
     <%= text_area_tag :notes, @journal.notes, :class => 'wiki-edit', 
                                               :rows => (@journal.notes.blank? ? 10 : [[10, @journal.notes.length / 50].max, 100].min) %>
     <%= call_hook(:view_journals_notes_form_after_notes, { :journal => @journal}) %>
-    <% if User.current.allowed_to?(:edit_issue_notes_author, @project) %>
-    <p>
-      <%= label_tag('user_login', l(:field_author)) %>
-      <%= text_field_tag 'user_login', @journal.user_login, :id => 'journal_user_login' %>
-    </p>
-    <div id="journal_user_results" class="autocomplete"></div>
-
-    <%= javascript_tag("new Ajax.Autocompleter('journal_user_login', 'journal_user_results', '#{ url_for(:controller => 'users', :action => 'autocomplete') }', { minChars: 1, frequency: 0.5, paramName: 'q', select: 'field' });") %>
-    <% end %>
-
+    <%= render :partial => 'author_field', :locals => {:user_login => @journal.user_login} %>
     <p>
       <%= submit_tag l(:button_save) %>
       <%= link_to l(:button_cancel), '#', :onclick => "Element.remove('journal-#{@journal.id}-form'); " +

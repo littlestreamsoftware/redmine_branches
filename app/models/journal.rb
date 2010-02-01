@@ -76,6 +76,7 @@ class Journal < ActiveRecord::Base
   def user_login=(login)
     if login && User.current.allowed_to?(:edit_issue_notes_author, project)
       self.user = User.find_by_login(login)
+      self.entered_by_id ||= User.current.id
     end
     self.user ||= User.current
   end
@@ -87,6 +88,6 @@ class Journal < ActiveRecord::Base
   private
 
   def set_entered_by
-    self.entered_by_id = self.user_id
+    self.entered_by_id ||= self.user_id
   end
 end
