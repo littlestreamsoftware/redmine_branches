@@ -92,6 +92,7 @@ class Issue < ActiveRecord::Base
     }
   }
 
+  before_create :set_entered_by
   after_save :create_journal
   
   # Returns true if usr or current user is allowed to view the issue
@@ -863,5 +864,9 @@ class Issue < ActiveRecord::Base
                                                 and #{where}
                                                 and i.project_id=#{project.id}
                                               group by s.id, s.is_closed, j.id")
+  end
+  
+  def set_entered_by
+    self.entered_by_id = self.author_id
   end
 end
