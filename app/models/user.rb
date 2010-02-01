@@ -332,7 +332,7 @@ class User < Principal
     when :all
       true
     when :selected
-      #
+      # Handled by the Project
     when :none
       false
     when :only_my_events
