@@ -430,8 +430,9 @@ class Issue < ActiveRecord::Base
   def recipients
     notified = project.notified_users
     # Author and assignee are always notified unless they have been locked
-    notified << author if author && author.active?
-    notified << assigned_to if assigned_to && assigned_to.active?
+    notified << author if author && author.active? && author.notify_about?(self)
+    recipients << entered_by if entered_by && entered_by.active? && entered_by.notify_about?(self)
+    notified << assigned_to if assigned_to && assigned_to.active? && assigned_to.notify_about?(self)
     notified.uniq!
     # Remove users that can not view the issue
     notified.reject! {|user| !visible?(user)}
