@@ -74,19 +74,41 @@ class UsersController < ApplicationController
   end
 
   def add
+    # TODO: Similar to My#account
+    @notification_options = User::MAIL_NOTIFICATION_OPTIONS
+    @notification_option = Setting.default_notification_option
+    
     if request.get?
       @user = User.new(:language => Setting.default_language)
+      # TODO: Similar to My#account
+      # Only users that belong to more than 1 project can select projects for which they are notified
+      # Note that @user.membership.size would fail since AR ignores
+      # :include association option when doing a count
+      if @user.memberships.length < 1
+        @notification_options.delete_if {|option| option.first == :selected}
+      end
     else
       @user = User.new(params[:user])
       @user.admin = params[:user][:admin] || false
       @user.login = params[:user][:login]
       @user.password, @user.password_confirmation = params[:password], params[:password_confirmation] unless @user.auth_source_id
+
+      # TODO: Similar to My#account
+      @user.mail_notification = params[:notification_option] || 'only_my_events'
+      @user.pref.attributes = params[:pref]
+      @user.pref[:no_self_notified] = (params[:no_self_notified] == '1')
+
       if @user.save
+        @user.pref.save
+        @user.notified_project_ids = (params[:notification_option] == 'selected' ? params[:notified_project_ids] : [])
+
         Mailer.deliver_account_information(@user, params[:password]) if params[:send_information]
         flash[:notice] = l(:notice_successful_create)
         redirect_to(params[:continue] ? {:controller => 'users', :action => 'add'} : 
                                         {:controller => 'users', :action => 'edit', :id => @user})
         return
+      else
+        @notification_option = @user.mail_notification
       end
     end
     @auth_sources = AuthSource.find(:all)
@@ -94,6 +116,7 @@ class UsersController < ApplicationController
 
   def edit
     @user = User.find(params[:id])
+    # TODO: Similar to My#account
     @notification_options = User::MAIL_NOTIFICATION_OPTIONS
     # Only users that belong to more than 1 project can select projects for which they are notified
     # Note that @user.membership.size would fail since AR ignores
