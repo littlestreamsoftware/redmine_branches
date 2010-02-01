@@ -99,8 +99,13 @@ class UsersControllerTest < ActionController::TestCase
 
   def test_edit
     ActionMailer::Base.deliveries.clear
-    post :edit, :id => 2, :user => {:firstname => 'Changed'}
-    assert_equal 'Changed', User.find(2).firstname
+    post :edit, :id => 2, :user => {:firstname => 'Changed'}, :notification_option => 'all', :pref => {:hide_mail => '1', :comments_sorting => 'desc'}
+
+    user = User.find(2)
+    assert_equal 'Changed', user.firstname
+    assert_equal 'all', user.mail_notification
+    assert_equal true, user.pref[:hide_mail]
+    assert_equal 'desc', user.pref[:comments_sorting]
     assert ActionMailer::Base.deliveries.empty?
   end
   
