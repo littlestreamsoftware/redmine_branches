@@ -1,0 +1,15 @@
+User-agent: *
+Disallow: /account
+Disallow: /activity
+Disallow: /boards
+Disallow: /documents
+Disallow: /issues
+Disallow: /my
+Disallow: /news
+Disallow: /projects
+Disallow: /queries
+Disallow: /search
+Disallow: /users
+Disallow: /versions
+Disallow: /wiki
+
