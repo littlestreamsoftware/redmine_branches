@@ -2,7 +2,7 @@
 class UpdateMailNotificationValues < ActiveRecord::Migration
   def self.up
     User.update_all("mail_notification = 'all'", "mail_notification = '1'")
-    User.update_all("mail_notification = 'my_events'", "mail_notification = '0'")
+    User.update_all("mail_notification = 'only_my_events'", "mail_notification = '0'")
   end
 
   def self.down
