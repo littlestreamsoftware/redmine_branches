@@ -363,6 +363,8 @@ class IssuesController < ApplicationController
     else
       @issue = @project.issues.visible.find(params[:id])
     end
+    # Tracker must be set before custom field values
+    @issue.tracker = @project.trackers.find((params[:issue] && params[:issue][:tracker_id]) || params[:tracker_id] || :first)
     @issue.attributes = params[:issue]
     @allowed_statuses = ([@issue.status] + @issue.status.find_new_statuses_allowed_to(User.current.roles_for_project(@project), @issue.tracker)).uniq
     @priorities = IssuePriority.all
