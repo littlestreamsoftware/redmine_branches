@@ -1,5 +1,6 @@
 <div class="contextual">
 <%= link_to l(:label_auth_source_new), {:action => 'new'}, :class => 'icon icon-add' %>
+<%= call_hook(:view_auth_sources_list_contextual, { :auth_sources => @auth_sources }) %>
 </div>
 
 <h2><%=l(:label_auth_source_plural)%></h2>
