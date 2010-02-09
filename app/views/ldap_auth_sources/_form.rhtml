@@ -40,5 +40,15 @@
 <p><label for="auth_source_attr_mail"><%=l(:field_mail)%></label>
 <%= text_field 'auth_source', 'attr_mail', :size => 20  %></p>
 </fieldset>
+
+<fieldset class="box">
+<legend><%=l(:label_group_plural)%></legend>
+<p>
+<% Group.all.each do |group| %>
+<%= check_box_tag 'auth_source[group_ids][]', group.id, @auth_source.groups.include?(group) %> <%=h group %><br />
+<% end %>
+</p>
+<%= hidden_field_tag 'auth_source[group_ids][]', '' %>
+</fieldset>
 <!--[eoform:auth_source]-->
 

@@ -74,4 +74,6 @@ class GroupTest < ActiveSupport::TestCase
     User.find(8).groups.clear
     assert !User.find(8).member_of?(Project.find(5))
   end
+
+  should_have_many :auth_sources
 end

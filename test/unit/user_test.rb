@@ -131,6 +131,45 @@ class UserTest < ActiveSupport::TestCase
     user = User.try_to_login("jsmith", "jsmith")
     assert_equal nil, user  
   end
+
+  if ldap_server_connected?
+    context "#try_to_login using LDAP" do
+      context "on the fly registration" do
+        setup do
+          @group = Group.generate!(:lastname => 'ldap group')
+          @group2 = Group.generate!(:lastname => 'ldap group 2')
+          @auth_source = AuthSourceLdap.generate!(:name => 'localhost',
+                                                  :host => '127.0.0.1',
+                                                  :port => 389,
+                                                  :base_dn => 'OU=Person,DC=redmine,DC=org',
+                                                  :attr_login => 'uid',
+                                                  :attr_firstname => 'givenName',
+                                                  :attr_lastname => 'sn',
+                                                  :attr_mail => 'mail',
+                                                  :onthefly_register => true,
+                                                  :groups => [@group, @group2])
+
+        end
+
+        context "with a successful authentication" do
+          should "create a new user account" do
+            assert_difference('User.count') do
+              User.try_to_login('edavis', '123456')
+            end
+          end
+          
+          should "add the AuthSource's groups to the user" do
+            @user = User.try_to_login('edavis', '123456')
+            assert @user.groups.include?(@group), "Group #{@group} was not included"
+            assert @user.groups.include?(@group2), "Group #{@group2} was not included"
+          end
+        end
+      end
+    end
+
+  else
+    puts "Skipping LDAP tests."
+  end
   
   if ldap_configured?
     context "#try_to_login using LDAP" do

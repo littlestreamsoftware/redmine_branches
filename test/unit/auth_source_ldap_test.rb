@@ -77,4 +77,6 @@ class AuthSourceLdapTest < ActiveSupport::TestCase
   else
     puts '(Test LDAP server not configured)'
   end
+
+  should_belong_to :group
 end
