@@ -132,7 +132,7 @@ class UserTest < ActiveSupport::TestCase
     assert_equal nil, user  
   end
 
-  if ldap_server_connected?
+  if ldap_configured?
     context "#try_to_login using LDAP" do
       context "on the fly registration" do
         setup do
