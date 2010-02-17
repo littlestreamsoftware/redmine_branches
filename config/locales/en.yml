@@ -284,6 +284,7 @@ en:
   field_group_by: Group results by
   field_sharing: Sharing
   field_parent_issue: Parent task
+  field_custom_ldap_filter: Custom LDAP filter
   
   setting_app_title: Application title
   setting_app_subtitle: Application subtitle
