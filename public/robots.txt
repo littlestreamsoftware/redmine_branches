@@ -12,4 +12,5 @@ Disallow: /search
 Disallow: /users
 Disallow: /versions
 Disallow: /wiki
+Disallow: /time_entries
 
