@@ -136,6 +136,8 @@ class UserTest < ActiveSupport::TestCase
     context "#try_to_login using LDAP" do
       context "on the fly registration" do
         setup do
+          @custom_field = UserCustomField.generate!(:name => 'Home directory')
+
           @group = Group.generate!(:lastname => 'ldap group')
           @group2 = Group.generate!(:lastname => 'ldap group 2')
           @auth_source = AuthSourceLdap.generate!(:name => 'localhost',
@@ -147,7 +149,8 @@ class UserTest < ActiveSupport::TestCase
                                                   :attr_lastname => 'sn',
                                                   :attr_mail => 'mail',
                                                   :onthefly_register => true,
-                                                  :groups => [@group, @group2])
+                                                  :groups => [@group, @group2],
+                                                  :custom_attributes => {@custom_field.id.to_s => 'homeDirectory'})
 
         end
 
@@ -162,6 +165,11 @@ class UserTest < ActiveSupport::TestCase
             @user = User.try_to_login('edavis', '123456')
             assert @user.groups.include?(@group), "Group #{@group} was not included"
             assert @user.groups.include?(@group2), "Group #{@group2} was not included"
+          end
+
+          should "set the user's custom attributes" do
+            @user = User.try_to_login('edavis', '123456')
+            assert_equal '/home/edavis', @user.custom_value_for(@custom_field).value
           end
         end
       end

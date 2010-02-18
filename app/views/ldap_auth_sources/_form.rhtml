@@ -44,6 +44,13 @@
 <%= text_field 'auth_source', 'attr_mail', :size => 20  %></p>
 </fieldset>
 
+<fieldset class="box"><legend><%=l(:label_custom_field_plural)%></legend>
+<% UserCustomField.all.each do |field| %>
+  <p><label for="auth_source_custom_attributes_#{field.id}"><%= h(field.name) %></label>
+  <%= text_field_tag "auth_source[custom_attributes][#{field.id}]", @auth_source.custom_attributes[field.id.to_s], :size => 20  %></p>
+<% end %>
+</fieldset>
+
 <fieldset class="box">
 <legend><%=l(:label_group_plural)%></legend>
 <p>

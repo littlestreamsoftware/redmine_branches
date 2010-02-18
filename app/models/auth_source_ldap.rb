@@ -26,9 +26,12 @@ class AuthSourceLdap < AuthSource
   validates_numericality_of :port, :only_integer => true
   
   before_validation :strip_ldap_attributes
+
+  serialize :custom_attributes
   
   def after_initialize
     self.port = 389 if self.port == 0
+    self.custom_attributes = {} if self.custom_attributes.nil?
   end
   
   def authenticate(login, password)
@@ -73,12 +76,18 @@ class AuthSourceLdap < AuthSource
   end
 
   def get_user_attributes_from_ldap_entry(entry)
+    custom_field_values = {}
+    custom_attributes.each do |custom_field_id, ldap_attr_name|
+      custom_field_values[custom_field_id] = AuthSourceLdap.get_attr(entry, ldap_attr_name)
+    end
+
     {
      :dn => entry.dn,
      :firstname => AuthSourceLdap.get_attr(entry, self.attr_firstname),
      :lastname => AuthSourceLdap.get_attr(entry, self.attr_lastname),
      :mail => AuthSourceLdap.get_attr(entry, self.attr_mail),
-     :auth_source_id => self.id
+     :auth_source_id => self.id,
+     :custom_field_values => custom_field_values
     }
   end
 
