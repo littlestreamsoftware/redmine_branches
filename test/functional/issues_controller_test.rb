@@ -19,7 +19,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 require 'issues_controller'
 
 # Re-raise errors caught by the controller.
-class IssuesController; def rescue_action(e) raise e end; end
+class IssuesController; def rescue_action(e) raise e; end; end
 
 class IssuesControllerTest < ActionController::TestCase
   fixtures :projects,
@@ -131,6 +131,34 @@ class IssuesControllerTest < ActionController::TestCase
     assert_template 'index.rhtml'
     assert_not_nil assigns(:issues)
   end
+
+  def assert_date_range_filter_with(issue_date, options = {})
+    issue = Issue.find(2)
+    issue.created_on = issue_date
+
+    if block_given?
+      tester = lambda {|issues| yield(issues)}
+    else
+      tester = lambda do |issues|
+        assert issues.find {|i| i.id == 2}, 'issue 2 must get into resultest'
+      end
+    end
+    issue.save!
+    get :index, :project_id => 1, 
+      :set_filter => 1,
+      :fields => ["created_on"],
+      :operators => {"created_on" => "<t<"},
+      :values => {"created_on" => [""]},
+      :from_values => {"created_on" => options[:from]},
+      :to_values => {"created_on" => options[:to]}
+    issues = assigns(:issues)
+    tester.call(issues)
+  end
+  
+  def test_date_range_filter_with_middle_issue_date
+    assert_date_range_filter_with('2006-07-19 17:00', :from => '2006-07-19',
+      :to => '2006-07-19')
+  end
   
   def test_index_with_query
     get :index, :project_id => 1, :query_id => 5
@@ -161,6 +189,26 @@ class IssuesControllerTest < ActionController::TestCase
     get :index, :sort => 'tracker'
   end
   
+  def test_date_range_filter_with_left_edge_issue_date
+    assert_date_range_filter_with('2006-07-19 00:00', :from => '2006-07-19',
+      :to => '2006-07-19')
+  end
+
+  def test_date_range_filter_with_right_edge_issue_date
+    assert_date_range_filter_with('2006-07-19 23:59', :from => '2006-07-19',
+      :to => '2006-07-19')
+  end
+
+  def test_date_range_filter_with_open_left
+    assert_date_range_filter_with('2006-07-19 17:00', :from => nil,
+      :to => '2006-07-19')
+  end
+
+  def test_date_range_filter_with_open_right
+    assert_date_range_filter_with('2006-07-19 17:00', :from => '2006-07-19',
+      :to => nil)
+  end
+
   def test_index_csv_with_project
     Setting.default_language = 'en'
     

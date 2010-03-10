@@ -101,6 +101,7 @@ class Query < ActiveRecord::Base
                   ">t-" => :label_less_than_ago,
                   "<t-" => :label_more_than_ago,
                   "t-"  => :label_ago,
+                  "<t<" => :label_in_date_range,
                   "~"   => :label_contains,
                   "!~"  => :label_not_contains }
 
@@ -110,8 +111,8 @@ class Query < ActiveRecord::Base
                                  :list_status => [ "o", "=", "!", "c", "*" ],
                                  :list_optional => [ "=", "!", "!*", "*" ],
                                  :list_subprojects => [ "*", "!*", "=" ],
-                                 :date => [ "<t+", ">t+", "t+", "t", "w", ">t-", "<t-", "t-" ],
-                                 :date_past => [ ">t-", "<t-", "t-", "t", "w" ],
+                                 :date => [ "<t+", ">t+", "t+", "t", "w", ">t-", "<t-", "t-", "<t<" ],
+                                 :date_past => [ ">t-", "<t-", "t-", "t", "w", "<t<" ],
                                  :string => [ "=", "~", "!", "!~" ],
                                  :text => [  "~", "!~" ],
                                  :integer => [ "=", ">=", "<=", "!*", "*" ] }
@@ -137,6 +138,10 @@ class Query < ActiveRecord::Base
     QueryColumn.new(:created_on, :sortable => "#{Issue.table_name}.created_on", :default_order => 'desc'),
   ]
   cattr_reader :available_columns
+
+  def range_operator?(operator)
+    operator == '<t<'
+  end
   
   def initialize(attributes = nil)
     super attributes
@@ -152,9 +157,15 @@ class Query < ActiveRecord::Base
     filters.each_key do |field|
       errors.add label_for(field), :blank unless 
           # filter requires one or more values
-          (values_for(field) and !values_for(field).first.blank?) or 
+          (filters[field][:values] and !filters[field][:values].first.blank?) or
           # filter doesn't require any value
-          ["o", "c", "!*", "*", "t", "w"].include? operator_for(field)
+          ["o", "c", "!*", "*", "t", "w", "<t<"].include? operator_for(field)
+
+      errors.add label_for(field), :activerecord_error_blank if
+          ["<t<"].include?(operator_for(field)) and
+          # filter requires that at least one value need to be set
+          (!filters[field][:values] or (filters[field][:values][0].blank? and filters[field][:values][1].blank?))
+
     end if filters
   end
   
@@ -260,9 +271,17 @@ class Query < ActiveRecord::Base
   end
   
   def values_for(field)
-    has_filter?(field) ? filters[field][:values] : nil
+    !range_operator?(operator_for(field)) && has_filter?(field) ? filters[field][:values] : nil
+  end
+
+  def from_value(field)
+    range_operator?(operator_for(field)) && has_filter?(field) ? filters[field][:values][0] : nil
   end
   
+  def to_value(field)
+    range_operator?(operator_for(field)) && has_filter?(field) ? filters[field][:values][1] : nil
+  end
+
   def label_for(field)
     label = available_filters[field][:name] if available_filters.has_key?(field)
     label ||= field.gsub(/\_id$/, "")
@@ -404,7 +423,7 @@ class Query < ActiveRecord::Base
     filters_clauses = []
     filters.each_key do |field|
       next if field == "subproject_id"
-      v = values_for(field).clone
+      v = filters[field][:values].clone
       next unless v and !v.empty?
       operator = operator_for(field)
       
@@ -540,6 +559,15 @@ class Query < ActiveRecord::Base
       sql = date_range_clause(db_table, db_field, value.first.to_i, value.first.to_i)
     when "t"
       sql = date_range_clause(db_table, db_field, 0, 0)
+    when "<t<"
+      # TODO: refactor date_range_clause to allow passing two dates
+      if value[0].blank?
+        sql = "#{db_table}.#{db_field} <= '%s'" % date_right_bound(value[1])
+      elsif value[1].blank?
+        sql = "#{db_table}.#{db_field} >= '%s'" % date_left_bound(value[0])
+      else
+        sql = "#{db_table}.#{db_field} BETWEEN '%s' AND '%s'" % [date_left_bound(value[0]), date_right_bound(value[1])]
+      end
     when "w"
       from = l(:general_first_day_of_week) == '7' ?
       # week starts on sunday
@@ -554,6 +582,14 @@ class Query < ActiveRecord::Base
     end
     
     return sql
+  end
+
+   def date_left_bound(value)
+    connection.quoted_date(value.to_s.to_date)
+  end
+ 
+  def date_right_bound(value)
+    connection.quoted_date(value.to_s.to_date + 1.day - 1.second)
   end
   
   def add_custom_fields_filters(custom_fields)

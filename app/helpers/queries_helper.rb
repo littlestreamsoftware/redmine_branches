@@ -80,7 +80,11 @@ module QueriesHelper
         @query.project = @project
         if params[:fields] and params[:fields].is_a? Array
           params[:fields].each do |field|
-            @query.add_filter(field, params[:operators][field], params[:values][field])
+            if @query.range_operator?(params[:operators][field])
+              @query.add_filter(field, params[:operators][field], [params[:from_values][field]] + [params[:to_values][field]])
+            else
+              @query.add_filter(field, params[:operators][field], params[:values][field])
+            end
           end
         else
           @query.available_filters.keys.each do |field|
