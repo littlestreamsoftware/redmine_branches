@@ -30,6 +30,34 @@ module IssuesHelper
       "<strong>#{@cached_label_assigned_to}</strong>: #{issue.assigned_to}<br />" +
       "<strong>#{@cached_label_priority}</strong>: #{issue.priority.name}"
   end
+    
+  def render_issue_subject_with_tree(issue)
+    s = ''
+    issue.ancestors.each do |ancestor|
+      s << '<div>' + content_tag('p', link_to_issue(ancestor))
+    end
+    s << '<div>' + content_tag('h3', h(issue.subject))
+    s << '</div>' * (issue.ancestors.size + 1)
+    s
+  end
+  
+  def render_descendants_tree(issue)
+    s = '<form><table class="list issues">'
+    ancestors = []
+    issue.descendants.sort_by(&:lft).each do |child|
+      level = child.level - issue.level - 1
+      s << content_tag('tr',
+             content_tag('td', check_box_tag("ids[]", child.id, false, :id => nil), :class => 'checkbox') +
+             content_tag('td', link_to_issue(child, :truncate => 60), :class => 'subject',
+                                                                      :style => "padding-left: #{level * 20}px") +
+             content_tag('td', h(child.status)) +
+             content_tag('td', link_to_user(child.assigned_to)) +
+             content_tag('td', progress_bar(child.done_ratio, :width => '80px')),
+             :class => "issue-#{child.id} hascontextmenu")
+    end
+    s << '</form></table>'
+    s
+  end
   
   def render_custom_fields_rows(issue)
     return if issue.custom_field_values.empty?
@@ -67,35 +95,25 @@ module IssuesHelper
   def show_detail(detail, no_html=false)
     case detail.property
     when 'attr'
-      label = l(("field_" + detail.prop_key.to_s.gsub(/\_id$/, "")).to_sym)   
-      case detail.prop_key
-      when 'due_date', 'start_date'
+      field = detail.prop_key.to_s.gsub(/\_id$/, "")
+      label = l(("field_" + field).to_sym)
+      case
+      when ['due_date', 'start_date'].include?(detail.prop_key)
         value = format_date(detail.value.to_date) if detail.value
         old_value = format_date(detail.old_value.to_date) if detail.old_value
-      when 'project_id'
-        p = Project.find_by_id(detail.value) and value = p.name if detail.value
-        p = Project.find_by_id(detail.old_value) and old_value = p.name if detail.old_value
-      when 'status_id'
-        s = IssueStatus.find_by_id(detail.value) and value = s.name if detail.value
-        s = IssueStatus.find_by_id(detail.old_value) and old_value = s.name if detail.old_value
-      when 'tracker_id'
-        t = Tracker.find_by_id(detail.value) and value = t.name if detail.value
-        t = Tracker.find_by_id(detail.old_value) and old_value = t.name if detail.old_value
-      when 'assigned_to_id'
-        u = User.find_by_id(detail.value) and value = u.name if detail.value
-        u = User.find_by_id(detail.old_value) and old_value = u.name if detail.old_value
-      when 'priority_id'
-        e = IssuePriority.find_by_id(detail.value) and value = e.name if detail.value
-        e = IssuePriority.find_by_id(detail.old_value) and old_value = e.name if detail.old_value
-      when 'category_id'
-        c = IssueCategory.find_by_id(detail.value) and value = c.name if detail.value
-        c = IssueCategory.find_by_id(detail.old_value) and old_value = c.name if detail.old_value
-      when 'fixed_version_id'
-        v = Version.find_by_id(detail.value) and value = v.name if detail.value
-        v = Version.find_by_id(detail.old_value) and old_value = v.name if detail.old_value
-      when 'estimated_hours'
+
+      when ['project_id', 'status_id', 'tracker_id', 'assigned_to_id', 'priority_id', 'category_id', 'fixed_version_id'].include?(detail.prop_key)
+        value = find_name_by_reflection(field, detail.value)
+        old_value = find_name_by_reflection(field, detail.old_value)
+
+      when detail.prop_key == 'estimated_hours'
         value = "%0.02f" % detail.value.to_f unless detail.value.blank?
         old_value = "%0.02f" % detail.old_value.to_f unless detail.old_value.blank?
+
+      when detail.prop_key == 'parent_id'
+        label = l(:field_parent_issue)
+        value = "##{detail.value}" unless detail.value.blank?
+        old_value = "##{detail.old_value}" unless detail.old_value.blank?
       end
     when 'cf'
       custom_field = CustomField.find_by_id(detail.prop_key)
@@ -138,6 +156,15 @@ module IssuesHelper
       end
     else
       l(:text_journal_deleted, :label => label, :old => old_value)
+    end
+  end
+
+  # Find the name of an associated record stored in the field attribute
+  def find_name_by_reflection(field, id)
+    association = Issue.reflect_on_association(field.to_sym)
+    if association
+      record = association.class_name.constantize.find_by_id(id)
+      return record.name if record
     end
   end
   

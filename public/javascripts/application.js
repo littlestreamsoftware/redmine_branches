@@ -194,6 +194,18 @@ function randomKey(size) {
 	return key;
 }
 
+function observeParentIssueField(url) {
+  new Ajax.Autocompleter('issue_parent_issue_id',
+                         'parent_issue_candidates',
+                         url,
+                         { minChars: 3,
+                           frequency: 0.5,
+                           paramName: 'q',
+                           updateElement: function(value) {
+                             document.getElementById('issue_parent_issue_id').value = value.id;
+                           }});
+}
+
 /* shows and hides ajax indicator */
 Ajax.Responders.register({
     onCreate: function(){
@@ -206,4 +218,10 @@ Ajax.Responders.register({
             Element.hide('ajax-indicator');
         }
     }
+});
+
+Event.observe(window, 'load', function() {
+  $$('.hol').each(function(el) {
+  	el.hide();
+	});
 });

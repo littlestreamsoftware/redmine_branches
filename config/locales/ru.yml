@@ -138,8 +138,10 @@ ru:
         many:  "больше {{count}} лет"
         other: "больше {{count}} лет"
       almost_x_years:
-        one:   "almost 1 year"
-        other: "almost {{count}} years"
+        one:   "почти 1 год"
+        few:   "почти {{count}} года"
+        many:  "почти {{count}} лет"
+        other: "почти {{count}} года"
     prompts:
       year: "Год"
       month: "Месяц"
@@ -279,6 +281,7 @@ ru:
   error_scm_annotate: "Данные отсутствуют или не могут быть подписаны."
   error_scm_command_failed: "Ошибка доступа к хранилищу: {{value}}"
   error_scm_not_found: Хранилище не содержит записи и/или исправления.
+  error_unable_delete_issue_status: Невозможно удалить статус задачи
 
   field_account: Учетная запись
   field_activity: Деятельность
@@ -604,6 +607,7 @@ ru:
   label_preferences: Предпочтения
   label_preview: Предварительный просмотр
   label_previous: Предыдущий
+  label_profile: Профиль
   label_project: проект
   label_project_all: Все проекты
   label_project_latest: Последние проекты
@@ -650,7 +654,7 @@ ru:
   label_send_information: Отправить пользователю информацию по учетной записи
   label_send_test_email: Послать email для проверки
   label_settings: Настройки
-  label_show_completed_versions: Показать завершенную версию
+  label_show_completed_versions: Показывать завершенные версии
   label_sort: Сортировать
   label_sort_by: "Сортировать по {{value}}"
   label_sort_higher: Вверх
@@ -702,24 +706,34 @@ ru:
   label_wiki_page_plural: Страницы Wiki
   label_workflow: Последовательность действий
   label_x_closed_issues_abbr:
-    zero:  0 закрыто
-    one:   1 закрыт
+    zero:  "0 закрыто"
+    one:   "1 закрыт"
+    few:   "{{count}} закрыто"
+    many:  "{{count}} закрыто"
     other: "{{count}} закрыто"
   label_x_comments:
-    zero: нет комментариев
-    one: 1 комментарий
+    zero:  "нет комментариев"
+    one:   "1 комментарий"
+    few:   "{{count}} комментария"
+    many:  "{{count}} комментариев"
     other: "{{count}} комментариев"
   label_x_open_issues_abbr:
-    zero:  0 открыто
-    one:   1 открыт
+    zero:  "0 открыто"
+    one:   "1 открыт"
+    few:   "{{count} открыто"
+    many:  "{{count} открыто"
     other: "{{count}} открыто"
   label_x_open_issues_abbr_on_total:
-    zero:  0 открыто / {{total}}
-    one:   1 открыт / {{total}}
+    zero:  "0 открыто / {{total}}"
+    one:   "1 открыт / {{total}}"
+    few:   "{{count}} открыто / {{total}}"
+    many:  "{{count}} открыто / {{total}}"
     other: "{{count}} открыто / {{total}}"
   label_x_projects:
-    zero:  нет проектов
-    one:   1 проект
+    zero:  "нет проектов"
+    one:   "1 проект"
+    few:   "{{count}} проекта"
+    many:  "{{count}} проектов"
     other: "{{count}} проектов"
   label_year: Год
   label_yesterday: вчера
@@ -781,9 +795,11 @@ ru:
   permission_edit_project: Редактирование проектов
   permission_edit_time_entries: Редактирование учета времени
   permission_edit_wiki_pages: Редактирование wiki-страниц
+  permission_export_wiki_pages: Экспорт wiki-страниц
   permission_log_time: Учет затраченного времени
   permission_view_changesets: Просмотр изменений хранилища
   permission_view_time_entries: Просмотр затраченного времени
+  permission_manage_project_activities: Управление активностью проекта
   permission_manage_boards: Управление форумами
   permission_manage_categories: Управление категориями задач
   permission_manage_documents: Управление документами
@@ -825,6 +841,7 @@ ru:
   setting_autofetch_changesets: Автоматически следить за изменениями хранилища
   setting_autologin: Автоматический вход
   setting_bcc_recipients: Использовать скрытые списки (bcc)
+  setting_cache_formatted_text: Кешировать форматированный текст
   setting_commit_fix_keywords: Назначение ключевых слов
   setting_commit_logs_encoding: Кодировка комментариев в хранилище
   setting_commit_ref_keywords: Ключевые слова для поиска
@@ -941,7 +958,7 @@ ru:
   text_journal_added: "{{label}} {{value}} добавлен"
   field_active: Активно
   enumeration_system_activity: Системная активность
-  permission_delete_issue_watchers: Удалить наблюдателей
+  permission_delete_issue_watchers: Удаление наблюдателей
   version_status_closed: закрыт
   version_status_locked: заблокирован
   version_status_open: открыт
@@ -974,7 +991,7 @@ ru:
   label_api_access_key: Ключ доступа к API
   text_line_separated: Разрешено несколько значений (по одному значению в строку).
   label_revision_id: Ревизия {{value}}
-  permission_view_issues: Показать проблемы
+  permission_view_issues: Просмотр задач
   label_display_used_statuses_only: Отображать только те статусы, которые используются в этом трекере
   label_api_access_key_created_on: Ключ доступ к API был создан {{value}} назад
   label_feeds_access_key: Ключ доступа к RSS
@@ -984,9 +1001,15 @@ ru:
   label_missing_api_access_key: Отсутствует ключ доступа к API
   label_missing_feeds_access_key: Отсутствует ключ доступа к RSS
   setting_mail_handler_body_delimiters: Урезать письмо после одной из этих строк
-  permission_add_subprojects: Создать подпроекты
+  permission_add_subprojects: Создание подпроектов
   label_subproject_new: Новый подпроект
   text_own_membership_delete_confirmation: |-
     Вы собираетесь удалить некоторые или все права, из-за чего могут пропасть права на редактирование этого проекта.
     Продолжить?
   label_close_versions: Закрыть завершенные версии
+  label_board_sticky: Прикреплена
+  label_board_locked: Заблокирована
+
+  permission_manage_subtasks: Manage subtasks
+  field_parent_issue: Parent task
+  label_subtask_plural: Subtasks

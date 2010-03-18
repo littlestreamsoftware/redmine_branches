@@ -27,7 +27,8 @@ class ApplicationHelperTest < HelperTestCase
                       :trackers, :issue_statuses, :issues, :versions, :documents,
                       :wikis, :wiki_pages, :wiki_contents,
                       :boards, :messages,
-                      :attachments
+                      :attachments,
+                      :enumerations
 
   def setup
     super
@@ -150,12 +151,14 @@ RAW
 
     message_url = {:controller => 'messages', :action => 'show', :board_id => 1, :id => 4}
     
+    project_url = {:controller => 'projects', :action => 'show', :id => 'subproject1'}
+    
     source_url = {:controller => 'repositories', :action => 'entry', :id => 'ecookbook', :path => ['some', 'file']}
     source_url_with_ext = {:controller => 'repositories', :action => 'entry', :id => 'ecookbook', :path => ['some', 'file.ext']}
     
     to_test = {
       # tickets
-      '#3, #3 and #3.'              => "#{issue_link}, #{issue_link} and #{issue_link}.",
+      '#3, [#3], (#3) and #3.'      => "#{issue_link}, [#{issue_link}], (#{issue_link}) and #{issue_link}.",
       # changesets
       'r1'                          => changeset_link,
       'r1.'                         => "#{changeset_link}.",
@@ -184,6 +187,10 @@ RAW
       # message
       'message#4'                   => link_to('Post 2', message_url, :class => 'message'),
       'message#5'                   => link_to('RE: post 2', message_url.merge(:anchor => 'message-5'), :class => 'message'),
+      # project
+      'project#3'                   => link_to('eCookbook Subproject 1', project_url, :class => 'project'),
+      'project:subproject1'         => link_to('eCookbook Subproject 1', project_url, :class => 'project'),
+      'project:"eCookbook subProject 1"'        => link_to('eCookbook Subproject 1', project_url, :class => 'project'),
       # escaping
       '!#3.'                        => '#3.',
       '!r1'                         => 'r1',
@@ -193,13 +200,23 @@ RAW
       '!version:1.0'                => 'version:1.0',
       '!version:"1.0"'              => 'version:"1.0"',
       '!source:/some/file'          => 'source:/some/file',
+      # not found
+      '#0123456789'                 => '#0123456789',
       # invalid expressions
       'source:'                     => 'source:',
       # url hash
       "http://foo.bar/FAQ#3"       => '<a class="external" href="http://foo.bar/FAQ#3">http://foo.bar/FAQ#3</a>',
     }
     @project = Project.find(1)
-    to_test.each { |text, result| assert_equal "<p>#{result}</p>", textilizable(text) }
+    to_test.each { |text, result| assert_equal "<p>#{result}</p>", textilizable(text), "#{text} failed" }
+  end
+  
+  def test_attachment_links
+    attachment_link = link_to('error281.txt', {:controller => 'attachments', :action => 'download', :id => '1'}, :class => 'attachment')
+    to_test = {
+      'attachment:error281.txt'      => attachment_link
+    }
+    to_test.each { |text, result| assert_equal "<p>#{result}</p>", textilizable(text, :attachments => Issue.find(3).attachments), "#{text} failed" }
   end
   
   def test_wiki_links
@@ -280,16 +297,57 @@ EXPECTED
     assert_equal expected.gsub(%r{[\r\n\t]}, ''), textilizable(raw).gsub(%r{[\r\n\t]}, '')
   end
   
+  def test_pre_content_should_not_parse_wiki_and_redmine_links
+    raw = <<-RAW
+[[CookBook documentation]]
+  
+#1
+
+<pre>
+[[CookBook documentation]]
+  
+#1
+</pre>
+RAW
+
+    expected = <<-EXPECTED
+<p><a href="/projects/ecookbook/wiki/CookBook_documentation" class="wiki-page">CookBook documentation</a></p>
+<p><a href="/issues/1" class="issue status-1 priority-1" title="Can't print recipes (New)">#1</a></p>
+<pre>
+[[CookBook documentation]]
+
+#1
+</pre>
+EXPECTED
+                                 
+    @project = Project.find(1)
+    assert_equal expected.gsub(%r{[\r\n\t]}, ''), textilizable(raw).gsub(%r{[\r\n\t]}, '')
+  end
+  
+  def test_non_closing_pre_blocks_should_be_closed
+    raw = <<-RAW
+<pre><code>
+RAW
+
+    expected = <<-EXPECTED
+<pre><code>
+</code></pre>
+EXPECTED
+                                 
+    @project = Project.find(1)
+    assert_equal expected.gsub(%r{[\r\n\t]}, ''), textilizable(raw).gsub(%r{[\r\n\t]}, '')
+  end
+  
   def test_syntax_highlight
     raw = <<-RAW
 <pre><code class="ruby">
 # Some ruby code here
-</pre></code>
+</code></pre>
 RAW
 
     expected = <<-EXPECTED
-<pre><code class="ruby CodeRay"><span class="no">1</span> <span class="c"># Some ruby code here</span>
-</pre></code>
+<pre><code class="ruby syntaxhl"><span class="no">1</span> <span class="c"># Some ruby code here</span>
+</code></pre>
 EXPECTED
 
     assert_equal expected.gsub(%r{[\r\n\t]}, ''), textilizable(raw).gsub(%r{[\r\n\t]}, '')

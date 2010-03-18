@@ -76,6 +76,14 @@ class ActiveSupport::TestCase
     saved_settings.each {|k, v| Setting[k] = v}
   end
 
+  def self.ldap_configured?
+    @test_ldap = Net::LDAP.new(:host => '127.0.0.1', :port => 389)
+    return @test_ldap.bind
+  rescue Exception => e
+    # LDAP is not listening
+    return nil
+  end
+
   # Shoulda macros
   def self.should_render_404
     should_respond_with :not_found
@@ -101,6 +109,37 @@ class ActiveSupport::TestCase
         filter.method == expected.method && filter.kind == expected.kind &&
         filter.options == expected.options && filter.class == expected.class
       }.size
+    end
+  end
+
+  def self.should_show_the_old_and_new_values_for(prop_key, model, &block)
+    context "" do
+      setup do
+        if block_given?
+          instance_eval &block
+        else
+          @old_value = model.generate!
+          @new_value = model.generate!
+        end
+      end
+
+      should "use the new value's name" do
+        @detail = JournalDetail.generate!(:property => 'attr',
+                                          :old_value => @old_value.id,
+                                          :value => @new_value.id,
+                                          :prop_key => prop_key)
+        
+        assert_match @new_value.name, show_detail(@detail, true)
+      end
+
+      should "use the old value's name" do
+        @detail = JournalDetail.generate!(:property => 'attr',
+                                          :old_value => @old_value.id,
+                                          :value => @new_value.id,
+                                          :prop_key => prop_key)
+        
+        assert_match @old_value.name, show_detail(@detail, true)
+      end
     end
   end
 end
