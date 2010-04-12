@@ -42,17 +42,9 @@ class AuthSourceLdapTest < ActiveSupport::TestCase
       setup do
         @custom_field = UserCustomField.generate!(:name => 'Home directory')
 
-        @auth = AuthSourceLdap.generate!(:name => 'on the fly',
-                                         :host => '127.0.0.1',
-                                         :port => 389,
-                                         :base_dn => 'OU=Person,DC=redmine,DC=org',
-                                         :attr_login => 'uid',
-                                         :attr_firstname => 'givenName',
-                                         :attr_lastname => 'sn',
-                                         :attr_mail => 'mail',
-                                         :onthefly_register => true,
-                                         :custom_attributes => {@custom_field.id.to_s => 'homeDirectory'})
-
+        @auth = AuthSourceLdap.find(1)
+        @auth.custom_attributes = {@custom_field.id.to_s => 'homeDirectory'}
+        @auth.save!
 
       end
 
@@ -78,10 +70,9 @@ class AuthSourceLdapTest < ActiveSupport::TestCase
         should 'return custom field attributes from LDAP' do
           response = @auth.authenticate('example1','123456')
 
-          assert response.is_a?(Array), "An array was not returned"
-          assert response.first.present?, "No user data returned"
+          assert response.is_a?(Hash), "A hash was not returned"
 
-          custom_field_attributes = response.first[:custom_field_values]
+          custom_field_attributes = response[:custom_field_values]
           assert custom_field_attributes.is_a?(Hash)
           assert custom_field_attributes.include?(@custom_field.id.to_s), "Custom field wasn't returned"
           assert_equal "/home/example1", custom_field_attributes[@custom_field.id.to_s]
