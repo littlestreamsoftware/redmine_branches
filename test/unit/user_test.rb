@@ -136,22 +136,14 @@ class UserTest < ActiveSupport::TestCase
     context "#try_to_login using LDAP" do
       context "on the fly registration" do
         setup do
+          @auth_source = AuthSourceLdap.find(1)
           @custom_field = UserCustomField.generate!(:name => 'Home directory')
 
           @group = Group.generate!(:lastname => 'ldap group')
           @group2 = Group.generate!(:lastname => 'ldap group 2')
-          @auth_source = AuthSourceLdap.generate!(:name => 'localhost',
-                                                  :host => '127.0.0.1',
-                                                  :port => 389,
-                                                  :base_dn => 'OU=Person,DC=redmine,DC=org',
-                                                  :attr_login => 'uid',
-                                                  :attr_firstname => 'givenName',
-                                                  :attr_lastname => 'sn',
-                                                  :attr_mail => 'mail',
-                                                  :onthefly_register => true,
-                                                  :groups => [@group, @group2],
-                                                  :custom_attributes => {@custom_field.id.to_s => 'homeDirectory'})
-
+          @auth_source.custom_attributes = {@custom_field.id.to_s => 'homeDirectory'}
+          @auth_source.groups = [@group, @group2]
+          @auth_source.save!
         end
 
         context "with a successful authentication" do
@@ -160,7 +152,7 @@ class UserTest < ActiveSupport::TestCase
               User.try_to_login('edavis', '123456')
             end
           end
-          
+
           should "add the AuthSource's groups to the user" do
             @user = User.try_to_login('edavis', '123456')
             assert @user.groups.include?(@group), "Group #{@group} was not included"
@@ -171,39 +163,7 @@ class UserTest < ActiveSupport::TestCase
             @user = User.try_to_login('edavis', '123456')
             assert_equal '/home/edavis', @user.custom_value_for(@custom_field).value
           end
-        end
-      end
-    end
 
-  else
-    puts "Skipping LDAP tests."
-  end
-  
-  if ldap_configured?
-    context "#try_to_login using LDAP" do
-      context "on the fly registration" do
-        setup do
-          @auth_source = AuthSourceLdap.find(1)
-        end
-
-        context "with a successful authentication" do
-          should "create a new user account if it doesn't exist" do
-            assert_difference('User.count') do
-              user = User.try_to_login('edavis', '123456')
-              assert !user.admin?
-            end
-          end
-          
-          should "retrieve existing user" do
-            user = User.try_to_login('edavis', '123456')
-            user.admin = true
-            user.save!
-            
-            assert_no_difference('User.count') do
-              user = User.try_to_login('edavis', '123456')
-              assert user.admin?
-            end
-          end
         end
       end
     end
