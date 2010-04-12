@@ -126,7 +126,7 @@ class User < Principal
         user.language = Setting.default_language
         if user.save
           user.reload
-          user.group_ids += user.auth_source.group_ids
+          user.group_ids += user.auth_source.group_ids if user.auth_source
           logger.info("User '#{user.login}' created from external auth source: #{user.auth_source.type} - #{user.auth_source.name}") if logger && user.auth_source
         end
       end
