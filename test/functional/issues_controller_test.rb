@@ -899,9 +899,9 @@ class IssuesControllerTest < ActionController::TestCase
     assert ActionMailer::Base.deliveries.empty?
   end
 
-  test 'POST to :edit should allow setting the issue author' do
+  test 'PUT to :update should allow setting the issue author' do
     @request.session[:user_id] = 2
-    post :edit,
+    put  :update,
          :id => 1,
          :issue => {:author_login => 'dlopper'}
 
@@ -916,9 +916,9 @@ class IssuesControllerTest < ActionController::TestCase
 
   end
 
-  test 'POST to :edit should allow setting the journal author' do
+  test 'PUT to :update should allow setting the journal author' do
     @request.session[:user_id] = 2
-    post :edit,
+    put  :update,
          :id => 1,
          :notes => 'A comment',
          :user_login => 'dlopper'
@@ -932,7 +932,7 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal User.find(2), journal.entered_by, "Journal's entered by was not updated to the creator"
   end
 
-  context "POST to :edit as the issue author" do
+  context "PUT to :update as the issue author" do
     setup do
       # Allow Non-Members to change the status from Closed to Assigned
       Workflow.generate!(:tracker_id => 1, :old_status_id => 5, :new_status_id => 2, :role_id => Role.non_member.id)
@@ -940,7 +940,7 @@ class IssuesControllerTest < ActionController::TestCase
       Issue.find(8).update_attributes(:author_id => 4)
 
       @request.session[:user_id] = 4 # Non-Member
-      post(:edit,
+      put(:update,
            :id => 8,
            :issue => {:status_id => 2, :subject => 'Changed'})
     end
