@@ -56,7 +56,7 @@ class IssuesController < ApplicationController
   def index
     retrieve_query
     sort_init(@query.sort_criteria.empty? ? [['id', 'desc']] : @query.sort_criteria)
-    sort_update({'id' => "#{Issue.table_name}.id"}.merge(@query.available_columns.inject({}) {|h, c| h[c.name.to_s] = c.sortable; h}))
+    sort_update(@query.sortable_columns)
     
     if @query.valid?
       limit = case params[:format]
@@ -94,7 +94,7 @@ class IssuesController < ApplicationController
   def changes
     retrieve_query
     sort_init 'id', 'desc'
-    sort_update({'id' => "#{Issue.table_name}.id"}.merge(@query.available_columns.inject({}) {|h, c| h[c.name.to_s] = c.sortable; h}))
+    sort_update(@query.sortable_columns)
     
     if @query.valid?
       @journals = @query.journals(:order => "#{Journal.table_name}.created_on DESC", 
@@ -136,26 +136,19 @@ class IssuesController < ApplicationController
       render_error l(:error_no_tracker_in_project)
       return
     end
+    if @issue.status.nil?
+      render_error l(:error_no_default_issue_status)
+      return
+    end
     if params[:issue].is_a?(Hash)
       @issue.safe_attributes = params[:issue]
       @issue.watcher_user_ids = params[:issue]['watcher_user_ids'] if User.current.allowed_to?(:add_issue_watchers, @project)
     end
     @issue.author = User.current
     
-    default_status = IssueStatus.default
-    unless default_status
-      render_error l(:error_no_default_issue_status)
-      return
-    end    
-    @issue.status = default_status
-    @allowed_statuses = @issue.new_statuses_allowed_to(User.current, true)
-    
     if request.get? || request.xhr?
       @issue.start_date ||= Date.today
     else
-      requested_status = IssueStatus.find_by_id(params[:issue][:status_id])
-      # Check that the user is allowed to apply the requested status
-      @issue.status = (@allowed_statuses.include? requested_status) ? requested_status : default_status
       call_hook(:controller_issues_new_before_save, { :params => params, :issue => @issue })
       if @issue.save
         attachments = Attachment.attach_files(@issue, params[:attachments])
@@ -179,6 +172,7 @@ class IssuesController < ApplicationController
       end
     end 
     @priorities = IssuePriority.all
+    @allowed_statuses = @issue.new_statuses_allowed_to(User.current, true)
     render :layout => !request.xhr?
   end
   
@@ -218,12 +212,6 @@ class IssuesController < ApplicationController
         format.xml  { render :xml => @issue.errors, :status => :unprocessable_entity }
       end
     end
-    
-  rescue ActiveRecord::StaleObjectError
-    # Optimistic locking exception
-    flash.now[:error] = l(:notice_locking_conflict)
-    # Remove the previously added attachments if issue was not updated
-    attachments[:files].each(&:destroy) if attachments[:files]
   end
 
   def reply
@@ -235,10 +223,13 @@ class IssuesController < ApplicationController
       user = @issue.author
       text = @issue.description
     end
-    content = "#{ll(Setting.default_language, :text_user_wrote, user)}\\n> "
-    content << text.to_s.strip.gsub(%r{<pre>((.|\s)*?)</pre>}m, '[...]').gsub('"', '\"').gsub(/(\r?\n|\r\n?)/, "\\n> ") + "\\n\\n"
+    # Replaces pre blocks with [...]
+    text = text.to_s.strip.gsub(%r{<pre>((.|\s)*?)</pre>}m, '[...]')
+    content = "#{ll(Setting.default_language, :text_user_wrote, user)}\n> "
+    content << text.gsub(/(\r?\n|\r\n?)/, "\n> ") + "\n\n"
+      
     render(:update) { |page|
-      page.<< "$('notes').value = \"#{content}\";"
+      page.<< "$('notes').value = \"#{escape_javascript content}\";"
       page.show 'update'
       page << "Form.Element.focus('notes');"
       page << "Element.scrollTo('update');"
@@ -456,9 +447,17 @@ class IssuesController < ApplicationController
   
   def preview
     @issue = @project.issues.find_by_id(params[:id]) unless params[:id].blank?
-    @attachements = @issue.attachments if @issue
-    @text = params[:notes] || (params[:issue] ? params[:issue][:description] : nil)
-    render :partial => 'common/preview'
+    if @issue
+      @attachements = @issue.attachments
+      @description = params[:issue] && params[:issue][:description]
+      if @description && @description.gsub(/(\r?\n|\n\r?)/, "\n") == @issue.description.to_s.gsub(/(\r?\n|\n\r?)/, "\n")
+        @description = nil
+      end
+      @notes = params[:notes]
+    else
+      @description = (params[:issue] ? params[:issue][:description] : nil)
+    end
+    render :layout => false
   end
   
   def auto_complete
