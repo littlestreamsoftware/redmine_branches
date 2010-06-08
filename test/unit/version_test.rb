@@ -110,46 +110,47 @@ class VersionTest < ActiveSupport::TestCase
       ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
       @project = Project.generate!(:identifier => 'test0')
       @project.trackers << Tracker.generate!
+
+      @version = Version.generate!(:project => @project, :effective_date => nil)
     end
     
     should "be false if there are no issues assigned" do
-      version = Version.generate!(:fixed_issues => [], :effective_date => Date.yesterday)
-      assert_equal false, version.behind_schedule?
+      @version.update_attribute(:effective_date, Date.yesterday)
+      assert_equal false, @version.behind_schedule?
     end
 
     should "be false if there is no effective_date" do
-      version = Version.generate!(:effective_date => nil)
-      assert_equal false, version.behind_schedule?
+      assert_equal false, @version.behind_schedule?
     end
 
-    should "be false if all of the issues are ahead of schedule" do
-      version = Version.generate!(:effective_date => 7.days.from_now.to_date,
-                                  :fixed_issues => [
-                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60), # 14 day span, 60% done, 50% time left
-                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60) # 14 day span, 60% done, 50% time left
-                                                   ])
-      assert_equal 60, version.completed_pourcent
-      assert_equal false, version.behind_schedule?
+    should "be false if all of the issues are ahead of schedule xxx" do
+      @version.update_attribute(:effective_date, 7.days.from_now.to_date)
+      @version.fixed_issues = [
+                               Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60), # 14 day span, 60% done, 50% time left
+                               Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60) # 14 day span, 60% done, 50% time left
+                              ]
+      assert_equal 60, @version.completed_pourcent
+      assert_equal false, @version.behind_schedule?
     end
 
     should "be true if any of the issues are behind schedule" do
-      version = Version.generate!(:effective_date => 7.days.from_now.to_date,
-                                  :fixed_issues => [
-                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60), # 14 day span, 60% done, 50% time left
-                                                    Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 20) # 14 day span, 20% done, 50% time left
-                                                   ])
-      assert_equal 40, version.completed_pourcent
-      assert_equal true, version.behind_schedule?
+      @version.update_attribute(:effective_date, 7.days.from_now.to_date)
+      @version.fixed_issues = [
+                               Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60), # 14 day span, 60% done, 50% time left
+                               Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 20) # 14 day span, 20% done, 50% time left
+                              ]
+      assert_equal 40, @version.completed_pourcent
+      assert_equal true, @version.behind_schedule?
     end
 
     should "be false if all of the issues are complete" do
-      version = Version.generate!(:effective_date => 7.days.ago.to_date,
-                                  :fixed_issues => [
-                                                    Issue.generate_for_project!(@project, :start_date => 14.days.ago, :done_ratio => 100, :status => IssueStatus.find(5)), # 7 day span
-                                                    Issue.generate_for_project!(@project, :start_date => 14.days.ago, :done_ratio => 100, :status => IssueStatus.find(5)) # 7 day span
-                                                   ])
-      assert_equal 100, version.completed_pourcent
-      assert_equal false, version.behind_schedule?
+      @version.update_attribute(:effective_date, 7.days.from_now.to_date)
+      @version.fixed_issues = [
+                               Issue.generate_for_project!(@project, :start_date => 14.days.ago, :done_ratio => 100, :status => IssueStatus.find(5)), # 7 day span
+                               Issue.generate_for_project!(@project, :start_date => 14.days.ago, :done_ratio => 100, :status => IssueStatus.find(5)) # 7 day span
+                              ]
+      assert_equal 100, @version.completed_pourcent
+      assert_equal false, @version.behind_schedule?
 
     end
   end
@@ -157,6 +158,7 @@ class VersionTest < ActiveSupport::TestCase
   context "#behind_schedule?" do
     setup do
       ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
+      Issue.destroy_all
       @project = Project.generate!(:identifier => 'test0')
       @project.trackers << Tracker.generate!
     end
@@ -166,29 +168,31 @@ class VersionTest < ActiveSupport::TestCase
     end
 
     context "incomplete version" do
+      setup do
+        @version = Version.generate!(:project => @project)
+        @issue = Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60, :fixed_version => @version)
+        @version.reload
+        assert_equal 1, @version.fixed_issues.length
+      end
 
       should "be false if there is no due_date" do
-        version = Version.generate!(:effective_date => nil,
-                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal false, version.behind_schedule?
+        @version.update_attribute(:effective_date, nil)
+        assert_equal false, @version.behind_schedule?
       end
 
       should "be false if the due_date is after today" do
-        version = Version.generate!(:effective_date => 7.days.from_now.to_date,
-                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal false, version.behind_schedule?
+        @version.update_attribute(:effective_date, 7.days.from_now.to_date)
+        assert_equal false, @version.behind_schedule?
       end
 
       should "be true if the due_date is today" do
-        version = Version.generate!(:effective_date => Date.today,
-                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal true, version.behind_schedule?
+        @version.update_attribute(:effective_date, Date.today)
+        assert_equal true, @version.behind_schedule?
       end
 
       should "be true if the due_date is before today" do
-        version = Version.generate!(:effective_date => 3.days.ago.to_date,
-                                    :fixed_issues => [Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60)])
-        assert_equal true, version.behind_schedule?
+        @version.update_attribute(:effective_date, 3.days.ago.to_date)
+        assert_equal true, @version.behind_schedule?
       end
     end
   end

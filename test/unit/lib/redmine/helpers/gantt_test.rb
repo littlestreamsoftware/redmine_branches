@@ -132,7 +132,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
       @project.enabled_module_names = [:issue_tracking]
       @tracker = Tracker.generate!
       @project.trackers << @tracker
-      @version = Version.generate!(:effective_date => 1.week.from_now.to_date, :shared => 'none')
+      @version = Version.generate!(:effective_date => 1.week.from_now.to_date, :sharing => 'none')
       @project.versions << @version
 
       @issue = Issue.generate!(:fixed_version => @version,
@@ -260,7 +260,7 @@ class Redmine::Helpers::GanttTest < ActiveSupport::TestCase
 
       should "include a link to the project" do
         @response.body = @gantt.subject_for_project(@project, {:format => :html})
-        assert_select 'a[href=?]', Regexp.escape("/projects/#{@project.identifier}"), :text => /#{@project.name}/
+        assert_select 'a[href=?]', "/projects/#{@project.identifier}", :text => /#{@project.name}/
       end
 
       should "style overdue projects" do

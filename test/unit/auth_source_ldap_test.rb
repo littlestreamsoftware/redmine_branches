@@ -49,30 +49,24 @@ class AuthSourceLdapTest < ActiveSupport::TestCase
       end
 
       context 'with a valid LDAP user' do
-        should 'return the firstname user attributes' do
-          response =  @auth.authenticate('example1','123456')
-          assert response
-          assert_equal 'Example', response.first[:firstname]
+        should 'return the user attributes' do
+          attributes =  @auth.authenticate('example1','123456')
+          assert attributes.is_a?(Hash), "An hash was not returned"
+          assert_equal 'Example', attributes[:firstname]
+          assert_equal 'One', attributes[:lastname]
+          assert_equal 'example1@redmine.org', attributes[:mail]
+          assert_equal @auth.id, attributes[:auth_source_id]
+          attributes.keys.each do |attribute|
+            assert User.new.respond_to?("#{attribute}="), "Unexpected :#{attribute} attribute returned"
+          end
         end
 
-        should 'return the lastname user attributes' do
-          response =  @auth.authenticate('example1','123456')
-          assert response
-          assert_equal 'One', response.first[:lastname]
-        end
+        should 'return custom field attributes from LDAP xxx' do
+          attributes = @auth.authenticate('example1','123456')
 
-        should 'return mail user attributes' do
-          response =  @auth.authenticate('example1','123456')
-          assert response
-          assert_equal 'example1@redmine.org', response.first[:mail]
-        end
+          assert attributes.is_a?(Hash), "A hash was not returned"
 
-        should 'return custom field attributes from LDAP' do
-          response = @auth.authenticate('example1','123456')
-
-          assert response.is_a?(Hash), "A hash was not returned"
-
-          custom_field_attributes = response[:custom_field_values]
+          custom_field_attributes = attributes[:custom_field_values]
           assert custom_field_attributes.is_a?(Hash)
           assert custom_field_attributes.include?(@custom_field.id.to_s), "Custom field wasn't returned"
           assert_equal "/home/example1", custom_field_attributes[@custom_field.id.to_s]
