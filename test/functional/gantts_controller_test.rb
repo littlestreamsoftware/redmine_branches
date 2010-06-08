@@ -12,8 +12,6 @@ class GanttsControllerTest < ActionController::TestCase
       assert_response :success
       assert_template 'show.html.erb'
       assert_not_nil assigns(:gantt)
-      events = assigns(:gantt).events
-      assert_not_nil events
       # Issue with start and due dates
       i = Issue.find(1)
       assert_not_nil i.due_date

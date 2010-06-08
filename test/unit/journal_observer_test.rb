@@ -17,8 +17,8 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class JournalObserverTest < Test::Unit::TestCase
-  fixtures :issues, :issue_statuses, :journals, :journal_details
+class JournalObserverTest < ActiveSupport::TestCase
+  fixtures :all
 
   def setup
     ActionMailer::Base.deliveries.clear

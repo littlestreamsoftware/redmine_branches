@@ -63,21 +63,10 @@ class Issue < ActiveRecord::Base
   
   named_scope :open, :conditions => ["#{IssueStatus.table_name}.is_closed = ?", false], :include => :status
 
-  def self.for_gantt_with_start_and_end_dates(query, date_from, date_to)
-    query.issues({
-                   :order => "start_date, due_date",
-                   :include => [:tracker, :status, :assigned_to, :priority, :project], 
-                   :conditions => ["(((start_date>=:from and start_date<=:to) or (due_date>=:from and due_date<=:to) or (start_date<:from and due_date>:to)) and start_date is not null and due_date is not null)", {:from => date_from, :to => date_to}]
-                 })
-  end
-  
-  def self.for_gantt_with_start_and_assigned_to_version_with_date(query, date_from, date_to)
-    query.issues({
-                   :order => "start_date, effective_date",
-                   :include => [:tracker, :status, :assigned_to, :priority, :project, :fixed_version], 
-                   :conditions => ["(((start_date>=:from and start_date<=:to) or (effective_date>=:from and effective_date<=:to) or (start_date<:from and effective_date>:to)) and start_date is not null and due_date is null and effective_date is not null)", {:from => date_from, :to => date_to}]
-                 })
-  end
+  named_scope :recently_updated, :order => "#{self.table_name}.updated_on DESC"
+  named_scope :with_limit, lambda { |limit| { :limit => limit} }
+  named_scope :on_active_project, :include => [:status, :project, :tracker],
+                                  :conditions => ["#{Project.table_name}.status=#{Project::STATUS_ACTIVE}"]
 
   named_scope :for_gantt, lambda {
     {
@@ -92,8 +81,18 @@ class Issue < ActiveRecord::Base
     }
   }
 
+  named_scope :with_query, lambda {|query|
+    {
+      :conditions => Query.merge_conditions(query.statement)
+    }
+  }
+
+  before_create :default_assign
+  before_save :reschedule_following_issues, :close_duplicates, :update_done_ratio_from_issue_status
+  after_save :update_nested_set_attributes, :update_parent_attributes, :create_journal
+  after_destroy :destroy_children
+  after_destroy :update_parent_attributes
   before_create :set_entered_by
-  after_save :create_journal
   
   # Returns true if usr or current user is allowed to view the issue
   def visible?(usr=nil)
@@ -432,7 +431,7 @@ class Issue < ActiveRecord::Base
     notified = project.notified_users
     # Author and assignee are always notified unless they have been locked
     notified << author if author && author.active? && author.notify_about?(self)
-    recipients << entered_by if entered_by && entered_by.active? && entered_by.notify_about?(self)
+    notified << entered_by if entered_by && entered_by.active? && entered_by.notify_about?(self)
     notified << assigned_to if assigned_to && assigned_to.active? && assigned_to.notify_about?(self)
     notified.uniq!
     # Remove users that can not view the issue

@@ -592,7 +592,7 @@ module Redmine
             i_width = ((i_end_date - i_start_date + 1)*options[:zoom]).floor - 2                  # total width of the issue (- 2 for left and right borders)
             d_width = ((i_done_date - i_start_date)*options[:zoom]).floor - 2                     # done width
             l_width = i_late_date ? ((i_late_date - i_start_date+1)*options[:zoom]).floor - 2 : 0 # delay width
-            css = "task " + (i.leaf? ? 'leaf' : 'parent')
+            css = "task " + (issue.leaf? ? 'leaf' : 'parent')
             
             # Make sure that negative i_left and i_width don't
             # overflow the subject
