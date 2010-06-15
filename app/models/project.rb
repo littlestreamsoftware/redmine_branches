@@ -394,7 +394,7 @@ class Project < ActiveRecord::Base
   
   # Returns the users that should be notified on project events
   def notified_users
-    members.select {|m| m.mail_notification? || m.user.mail_notification?}.collect {|m| m.user}
+    members.select {|m| m.mail_notification? || m.user.mail_notification == 'all'}.collect {|m| m.user}
   end
   
   # Returns an array of all custom fields enabled for project issues
