@@ -5,12 +5,12 @@
 <div class="splitcontentleft">
 <% if members.any? %>
 <table class="list members">
-	<thead>
+	<thead><tr>
 	  <th><%= l(:label_user) %> / <%= l(:label_group) %></th>
 	  <th><%= l(:label_role_plural) %></th>
 	  <th style="width:15%"></th>
           <%= call_hook(:view_projects_settings_members_table_header, :project => @project) %>
-	</thead>
+	</tr></thead>
 	<tbody>
 	<% members.each do |member| %>
 	<% next if member.new_record? %>
@@ -42,8 +42,8 @@
   </td>
   <%= call_hook(:view_projects_settings_members_table_row, { :project => @project, :member => member}) %>
 	</tr>
-	</tbody>
 <% end; reset_cycle %>
+	</tbody>
 </table>
 <% else %>
 <p class="nodata"><%= l(:label_no_data) %></p>
@@ -58,7 +58,7 @@
   <% remote_form_for(:member, @member, :url => {:controller => 'members', :action => 'new', :id => @project}, :method => :post) do |f| %>
     <fieldset><legend><%=l(:label_member_new)%></legend>
     
-		<p><%= text_field_tag 'principal_search', nil, :size => "40" %></p>
+		<p><%= text_field_tag 'principal_search', nil %></p>
 		<%= observe_field(:principal_search,
                  :frequency => 0.5,
                  :update => :principals,

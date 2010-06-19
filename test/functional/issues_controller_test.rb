@@ -231,72 +231,6 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal columns, session[:query][:column_names].map(&:to_s)
   end
 
-  def test_gantt
-    get :gantt, :project_id => 1
-    assert_response :success
-    assert_template 'gantt.rhtml'
-    assert_not_nil assigns(:gantt)
-    events = assigns(:gantt).events
-    assert_not_nil events
-    # Issue with start and due dates
-    i = Issue.find(1)
-    assert_not_nil i.due_date
-    assert events.include?(Issue.find(1))
-    # Issue with without due date but targeted to a version with date
-    i = Issue.find(2)
-    assert_nil i.due_date
-    assert events.include?(i)
-  end
-
-  def test_cross_project_gantt
-    get :gantt
-    assert_response :success
-    assert_template 'gantt.rhtml'
-    assert_not_nil assigns(:gantt)
-    events = assigns(:gantt).events
-    assert_not_nil events
-  end
-
-  def test_gantt_export_to_pdf
-    get :gantt, :project_id => 1, :format => 'pdf'
-    assert_response :success
-    assert_equal 'application/pdf', @response.content_type
-    assert @response.body.starts_with?('%PDF')
-    assert_not_nil assigns(:gantt)
-  end
-
-  def test_cross_project_gantt_export_to_pdf
-    get :gantt, :format => 'pdf'
-    assert_response :success
-    assert_equal 'application/pdf', @response.content_type
-    assert @response.body.starts_with?('%PDF')
-    assert_not_nil assigns(:gantt)
-  end
-  
-  if Object.const_defined?(:Magick)
-    def test_gantt_image
-      get :gantt, :project_id => 1, :format => 'png'
-      assert_response :success
-      assert_equal 'image/png', @response.content_type
-    end
-  else
-    puts "RMagick not installed. Skipping tests !!!"
-  end
-  
-  def test_calendar
-    get :calendar, :project_id => 1
-    assert_response :success
-    assert_template 'calendar'
-    assert_not_nil assigns(:calendar)
-  end
-  
-  def test_cross_project_calendar
-    get :calendar
-    assert_response :success
-    assert_template 'calendar'
-    assert_not_nil assigns(:calendar)
-  end
-  
   def test_changes
     get :changes, :project_id => 1
     assert_response :success
@@ -446,10 +380,10 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal 'This is the test_new issue', issue.subject
   end
   
-  def test_post_new
+  def test_post_create
     @request.session[:user_id] = 2
     assert_difference 'Issue.count' do
-      post :new, :project_id => 1, 
+      post :create, :project_id => 1, 
                  :issue => {:tracker_id => 3,
                             :status_id => 2,
                             :subject => 'This is the test_new issue',
@@ -471,9 +405,9 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal 'Value for field 2', v.value
   end
   
-  def test_post_new_and_continue
+  def test_post_create_and_continue
     @request.session[:user_id] = 2
-    post :new, :project_id => 1, 
+    post :create, :project_id => 1, 
                :issue => {:tracker_id => 3,
                           :subject => 'This is first issue',
                           :priority_id => 5},
@@ -481,10 +415,10 @@ class IssuesControllerTest < ActionController::TestCase
     assert_redirected_to :controller => 'issues', :action => 'new', :issue => {:tracker_id => 3}
   end
   
-  def test_post_new_without_custom_fields_param
+  def test_post_create_without_custom_fields_param
     @request.session[:user_id] = 2
     assert_difference 'Issue.count' do
-      post :new, :project_id => 1, 
+      post :create, :project_id => 1, 
                  :issue => {:tracker_id => 1,
                             :subject => 'This is the test_new issue',
                             :description => 'This is the description',
@@ -493,12 +427,12 @@ class IssuesControllerTest < ActionController::TestCase
     assert_redirected_to :controller => 'issues', :action => 'show', :id => Issue.last.id
   end
 
-  def test_post_new_with_required_custom_field_and_without_custom_fields_param
+  def test_post_create_with_required_custom_field_and_without_custom_fields_param
     field = IssueCustomField.find_by_name('Database')
     field.update_attribute(:is_required, true)
 
     @request.session[:user_id] = 2
-    post :new, :project_id => 1, 
+    post :create, :project_id => 1, 
                :issue => {:tracker_id => 1,
                           :subject => 'This is the test_new issue',
                           :description => 'This is the description',
@@ -510,12 +444,12 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal I18n.translate('activerecord.errors.messages.invalid'), issue.errors.on(:custom_values)
   end
   
-  def test_post_new_with_watchers
+  def test_post_create_with_watchers
     @request.session[:user_id] = 2
     ActionMailer::Base.deliveries.clear
     
     assert_difference 'Watcher.count', 2 do
-      post :new, :project_id => 1, 
+      post :create, :project_id => 1, 
                  :issue => {:tracker_id => 1,
                             :subject => 'This is a new issue with watchers',
                             :description => 'This is the description',
@@ -535,11 +469,11 @@ class IssuesControllerTest < ActionController::TestCase
     assert [mail.bcc, mail.cc].flatten.include?(User.find(3).mail)
   end
   
-  def test_post_new_subissue
+  def test_post_create_subissue
     @request.session[:user_id] = 2
     
     assert_difference 'Issue.count' do
-      post :new, :project_id => 1, 
+      post :create, :project_id => 1, 
                  :issue => {:tracker_id => 1,
                             :subject => 'This is a child issue',
                             :parent_issue_id => 2}
@@ -549,11 +483,11 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal Issue.find(2), issue.parent
   end
   
-  def test_post_new_should_send_a_notification
+  def test_post_create_should_send_a_notification
     ActionMailer::Base.deliveries.clear
     @request.session[:user_id] = 2
     assert_difference 'Issue.count' do
-      post :new, :project_id => 1, 
+      post :create, :project_id => 1, 
                  :issue => {:tracker_id => 3,
                             :subject => 'This is the test_new issue',
                             :description => 'This is the description',
@@ -566,9 +500,9 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal 1, ActionMailer::Base.deliveries.size
   end
   
-  def test_post_should_preserve_fields_values_on_validation_failure
+  def test_post_create_should_preserve_fields_values_on_validation_failure
     @request.session[:user_id] = 2
-    post :new, :project_id => 1, 
+    post :create, :project_id => 1, 
                :issue => {:tracker_id => 1,
                           # empty subject
                           :subject => '',
@@ -593,10 +527,10 @@ class IssuesControllerTest < ActionController::TestCase
                                         :value => 'Value for field 2'}
   end
   
-  def test_post_new_should_ignore_non_safe_attributes
+  def test_post_create_should_ignore_non_safe_attributes
     @request.session[:user_id] = 2
     assert_nothing_raised do
-      post :new, :project_id => 1, :issue => { :tracker => "A param can not be a Tracker" }
+      post :create, :project_id => 1, :issue => { :tracker => "A param can not be a Tracker" }
     end
   end
   
@@ -619,7 +553,7 @@ class IssuesControllerTest < ActionController::TestCase
       
       should "accept default status" do
         assert_difference 'Issue.count' do
-          post :new, :project_id => 1, 
+          post :create, :project_id => 1, 
                      :issue => {:tracker_id => 1,
                                 :subject => 'This is an issue',
                                 :status_id => 1}
@@ -630,7 +564,7 @@ class IssuesControllerTest < ActionController::TestCase
       
       should "ignore unauthorized status" do
         assert_difference 'Issue.count' do
-          post :new, :project_id => 1, 
+          post :create, :project_id => 1, 
                      :issue => {:tracker_id => 1,
                                 :subject => 'This is an issue',
                                 :status_id => 3}
@@ -827,7 +761,7 @@ class IssuesControllerTest < ActionController::TestCase
       put :update,
            :id => 1,
            :notes => '2.5 hours added',
-           :time_entry => { :hours => '2.5', :comments => 'test_put_update_with_note_and_spent_time', :activity_id => TimeEntryActivity.first }
+           :time_entry => { :hours => '2.5', :comments => 'test_put_update_with_note_and_spent_time', :activity_id => TimeEntryActivity.first.id }
     end
     assert_redirected_to :action => 'show', :id => '1'
     
@@ -1163,6 +1097,10 @@ class IssuesControllerTest < ActionController::TestCase
     end
     
     should "allow changing the issue's attributes" do
+      # Fixes random test failure with Mysql
+      # where Issue.all(:limit => 2, :order => 'id desc', :conditions => {:project_id => 2}) doesn't return the expected results
+      Issue.delete_all("project_id=2")
+      
       @request.session[:user_id] = 2
       assert_difference 'Issue.count', 2 do
         assert_no_difference 'Project.find(1).issues.count' do
@@ -1288,13 +1226,6 @@ class IssuesControllerTest < ActionController::TestCase
     assert_not_nil assigns(:notes)
   end
 
-  def test_auto_complete_routing
-    assert_routing(
-      {:method => :get, :path => '/issues/auto_complete'},
-      :controller => 'issues', :action => 'auto_complete'
-    )
-  end
-  
   def test_auto_complete_should_not_be_case_sensitive
     get :auto_complete, :project_id => 'ecookbook', :q => 'ReCiPe'
     assert_response :success
@@ -1307,13 +1238,6 @@ class IssuesControllerTest < ActionController::TestCase
     assert_response :success
     assert_not_nil assigns(:issues)
     assert assigns(:issues).include?(Issue.find(13))
-  end
-  
-  def test_destroy_routing
-    assert_recognizes( #TODO: use DELETE on issue URI (need to change forms)
-      {:controller => 'issues', :action => 'destroy', :id => '1'},
-      {:method => :post, :path => '/issues/1/destroy'}
-    )
   end
   
   def test_destroy_issue_with_no_time_entries
