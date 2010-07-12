@@ -359,7 +359,7 @@ class Mailer < ActionMailer::Base
     # Removes the current user from the recipients and cc
     # if he doesn't want to receive notifications about what he does
     @author ||= User.current
-    if @author.pref[:no_self_notified]
+    if @author && @author.mail && @author.pref[:no_self_notified]
       recipients.delete(@author.mail) if recipients
       cc.delete(@author.mail) if cc
     end
