@@ -3,3 +3,4 @@ faker
 random_data
 ruby-openid
 hoptoad_notifier
+memcached-northscale
