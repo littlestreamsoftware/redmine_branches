@@ -64,6 +64,7 @@ h4, .wiki h3 {font-size: 13px;padding: 2px 10px 1px 0px;margin-bottom: 5px; bord
 #admin-menu a.settings { background-image: url(../images/changeset.png); }
 #admin-menu a.plugins { background-image: url(../images/plugin.png); }
 #admin-menu a.info { background-image: url(../images/help.png); }
+#admin-menu a.server_authentication { background-image: url(../images/server_key.png); }
 
 #main {background-color:#EEEEEE;}
 
@@ -286,8 +287,8 @@ fieldset#filters td.add-filter { text-align: right; vertical-align: top; }
 .buttons { font-size: 0.9em; margin-bottom: 1.4em; margin-top: 1em; }
 
 div#issue-changesets {float:right; width:45%; margin-left: 1em; margin-bottom: 1em; background: #fff; padding-left: 1em; font-size: 90%;}
-div#issue-changesets .changeset { padding: 4px;}
-div#issue-changesets .changeset { border-bottom: 1px solid #ddd; }
+div#issue-changesets div.changeset { padding: 4px;}
+div#issue-changesets div.changeset { border-bottom: 1px solid #ddd; }
 div#issue-changesets p { margin-top: 0; margin-bottom: 1em;}
 
 div#activity dl, #search-results { margin-left: 2em; }
@@ -343,10 +344,9 @@ form .attributes select { min-width: 50%; }
 
 ul.projects { margin: 0; padding-left: 1em; }
 ul.projects.root { margin: 0;  padding: 0; }
-ul.projects ul { border-left: 3px solid #e0e0e0; }
-ul.projects li { list-style-type:none; } 
-ul.projects li.root { margin-bottom: 1em; }
-ul.projects li.child { margin-top: 1em;}
+ul.projects ul.projects { border-left: 3px solid #e0e0e0; }
+ul.projects li.root { list-style-type:none; margin-bottom: 1em; }
+ul.projects li.child { list-style-type:none; margin-top: 1em;}
 ul.projects div.root a.project { font-family: "Trebuchet MS", Verdana, sans-serif; font-weight: bold; font-size: 16px; margin: 0 0 10px 0; }
 .my-project { padding-left: 18px; background: url(../images/fav.png) no-repeat 0 50%; }
 
@@ -519,10 +519,11 @@ vertical-align: bottom;
 
 /***** Calendar *****/
 table.cal {border-collapse: collapse; width: 100%; margin: 0px 0 6px 0;border: 1px solid #d7d7d7;}
-table.cal thead th {width: 14%;}
+table.cal thead th {width: 14%; background-color:#EEEEEE; padding: 4px; }
+table.cal thead th.week-number {width: auto;}
 table.cal tbody tr {height: 100px;}
-table.cal th { background-color:#EEEEEE; padding: 4px; }
 table.cal td {border: 1px solid #d7d7d7; vertical-align: top; font-size: 0.9em;}
+table.cal td.week-number { background-color:#EEEEEE; padding: 4px; border:none; font-size: 1em;}
 table.cal td p.day-num {font-size: 1.1em; text-align:right;}
 table.cal td.odd p.day-num {color: #bbb;}
 table.cal td.today {background:#ffffdd;}
@@ -696,6 +697,7 @@ div.wiki pre {
     border: 1px solid #dadada;
     width:auto;
     overflow-x: auto;
+    overflow-y: hidden;
 }
 
 div.wiki ul.toc {
@@ -850,6 +852,7 @@ padding-bottom: 3px;
 .icon-comment  { background-image: url(../images/comment.png); }
 .icon-summary  { background-image: url(../images/lightning.png); }
 .icon-issue { background-image: url(../images/ticket.png); }
+.icon-server-authentication { background-image: url(../images/server_key.png); }
 
 .icon-file { background-image: url(../images/files/default.png); }
 .icon-file.text-plain { background-image: url(../images/files/text.png); }
@@ -919,6 +922,10 @@ td.username img.gravatar {
 	clear: left;
 }
 
+.journal-link {
+	float: right;
+}
+
 h2 img { vertical-align:middle; }
 
 .hascontextmenu { cursor: context-menu; }
@@ -929,4 +936,5 @@ h2 img { vertical-align:middle; }
   #main { background: #fff; }
   #content { width: 99%; margin: 0; padding: 0; border: 0; background: #fff; overflow: visible !important;}
 	#wiki_add_attachment { display:none; }
+  .hide-when-print { display: none; }
 }

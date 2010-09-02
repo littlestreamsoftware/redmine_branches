@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-ENV["RAILS_ENV"] ||= "test"
+ENV["RAILS_ENV"] = "test"
 require File.expand_path(File.dirname(__FILE__) + "/../config/environment")
 require 'test_help'
 require File.expand_path(File.dirname(__FILE__) + '/helper_testcase')
@@ -61,7 +61,21 @@ class ActiveSupport::TestCase
   def uploaded_test_file(name, mime)
     ActionController::TestUploadedFile.new(ActiveSupport::TestCase.fixture_path + "/files/#{name}", mime)
   end
-  
+
+  # Mock out a file
+  def self.mock_file
+    file = 'a_file.png'
+    file.stubs(:size).returns(32)
+    file.stubs(:original_filename).returns('a_file.png')
+    file.stubs(:content_type).returns('image/png')
+    file.stubs(:read).returns(false)
+    file
+  end
+
+  def mock_file
+    self.class.mock_file
+  end
+
   # Use a temporary directory for attachment related tests
   def set_tmp_attachments_directory
     Dir.mkdir "#{RAILS_ROOT}/tmp/test" unless File.directory?("#{RAILS_ROOT}/tmp/test")
@@ -74,6 +88,12 @@ class ActiveSupport::TestCase
     options.each {|k, v| Setting[k] = v}
     yield
     saved_settings.each {|k, v| Setting[k] = v}
+  end
+
+  def change_user_password(login, new_password)
+    user = User.first(:conditions => {:login => login})
+    user.password, user.password_confirmation = new_password, new_password
+    user.save!
   end
 
   def self.ldap_configured?
@@ -150,6 +170,15 @@ class ActiveSupport::TestCase
         
         assert_match @old_value.name, show_detail(@detail, true)
       end
+    end
+  end
+
+  def self.should_create_a_new_user(&block)
+    should "create a new user" do
+      user = instance_eval &block
+      assert user
+      assert_kind_of User, user
+      assert !user.new_record?
     end
   end
 end

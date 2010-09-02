@@ -1,4 +1,5 @@
 uk:
+  direction: ltr
   date:
     formats:
       # Use the strftime parameters for formats.
@@ -64,6 +65,10 @@ uk:
         other: "almost {{count}} years"
 
   number: 
+    format:
+      separator: "."
+      delimiter: ""
+      precision: 3
     human: 
       format: 
         precision: 1
@@ -611,7 +616,7 @@ uk:
   text_user_mail_option: "Для невибраних проектів ви отримуватимете повідомлення тільки про те, що проглядаєте або в чому берете участь (наприклад, питання автором яких ви є або які вам призначені)."
   
   default_role_manager: Менеджер
-  default_role_developper: Розробник
+  default_role_developer: Розробник
   default_role_reporter: Репортер
   звітів default_tracker_bug: Помилка
   default_tracker_feature: Властивість 
@@ -706,7 +711,7 @@ uk:
   text_subprojects_destroy_warning: "Its subproject(s): {{value}} will be also deleted."
   label_and_its_subprojects: "{{value}} and its subprojects"
   mail_body_reminder: "{{count}} issue(s) that are assigned to you are due in the next {{days}} days:"
-  mail_subject_reminder: "{{count}} issue(s) due in the next days"
+  mail_subject_reminder: "{{count}} issue(s) due in the next {{days}} days"
   text_user_wrote: "{{value}} wrote:"
   label_duplicated_by: duplicated by
   setting_enabled_scm: Enabled SCM
@@ -898,3 +903,8 @@ uk:
   notice_failed_to_save_members: "Failed to save member(s): {{errors}}."
   text_zoom_out: Zoom out
   text_zoom_in: Zoom in
+  notice_unable_delete_time_entry: Unable to delete time log entry.
+  label_overall_spent_time: Overall spent time
+  field_time_entries: Log time
+  project_module_gantt: Gantt
+  project_module_calendar: Calendar

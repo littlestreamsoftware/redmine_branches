@@ -140,6 +140,7 @@ vi:
         not_same_project: "không thuộc cùng dự án"
         circular_dependency: "quan hệ có thể gây ra lặp vô tận"
 
+  direction: ltr
   date:
     formats:
       # Use the strftime parameters for formats.
@@ -226,7 +227,7 @@ vi:
   mail_body_account_information: Thông tin về tài khoản
   mail_subject_account_activation_request: "{{value}}: Yêu cầu chứng thực tài khoản"
   mail_body_account_activation_request: "Người dùng ({{value}}) mới đăng ký và cần bạn xác nhận:"
-  mail_subject_reminder: "{{count}} vấn đề hết hạn trong các ngày tới"
+  mail_subject_reminder: "{{count}} vấn đề hết hạn trong các {{days}} ngày tới"
   mail_body_reminder: "{{count}} vấn đề gán cho bạn sẽ hết hạn trong {{days}} ngày tới:"
   
   gui_validation_error: 1 lỗi
@@ -762,7 +763,7 @@ vi:
   text_email_delivery_not_configured: "Email delivery is not configured, and notifications are disabled.\nConfigure your SMTP server in config/email.yml and restart the application to enable them."
   
   default_role_manager: Điều hành
-  default_role_developper: Phát triển
+  default_role_developer: Phát triển
   default_role_reporter: Báo cáo
   default_tracker_bug: Lỗi
   default_tracker_feature: Tính năng
@@ -961,3 +962,8 @@ vi:
   notice_failed_to_save_members: "Failed to save member(s): {{errors}}."
   text_zoom_out: Zoom out
   text_zoom_in: Zoom in
+  notice_unable_delete_time_entry: Unable to delete time log entry.
+  label_overall_spent_time: Overall spent time
+  field_time_entries: Log time
+  project_module_gantt: Gantt
+  project_module_calendar: Calendar

@@ -63,7 +63,7 @@ class User < Principal
   attr_protected :login, :admin, :password, :password_confirmation, :hashed_password, :group_ids
 	
   validates_presence_of :login, :firstname, :lastname, :mail, :if => Proc.new { |user| !user.is_a?(AnonymousUser) }
-  validates_uniqueness_of :login, :if => Proc.new { |user| !user.login.blank? }
+  validates_uniqueness_of :login, :if => Proc.new { |user| !user.login.blank? }, :case_sensitive => false
   validates_uniqueness_of :mail, :if => Proc.new { |user| !user.mail.blank? }, :case_sensitive => false
   # Login must contain lettres, numbers, underscores only
   validates_format_of :login, :with => /^[a-z0-9_\-@\.]*$/i
@@ -89,6 +89,10 @@ class User < Principal
     super
   end
   
+  def mail=(arg)
+    write_attribute(:mail, arg.to_s.strip)
+  end
+  
   def identity_url=(url)
     if url.blank?
       write_attribute(:identity_url, '')
@@ -106,7 +110,7 @@ class User < Principal
   def self.try_to_login(login, password)
     # Make sure no one can sign in with an empty password
     return nil if password.to_s.empty?
-    user = find(:first, :conditions => ["login=?", login])
+    user = find_by_login(login)
     if user
       # user is already in local database
       return nil if !user.active?
@@ -171,6 +175,30 @@ class User < Principal
     self.status == STATUS_LOCKED
   end
 
+  def activate
+    self.status = STATUS_ACTIVE
+  end
+
+  def register
+    self.status = STATUS_REGISTERED
+  end
+
+  def lock
+    self.status = STATUS_LOCKED
+  end
+
+  def activate!
+    update_attribute(:status, STATUS_ACTIVE)
+  end
+
+  def register!
+    update_attribute(:status, STATUS_REGISTERED)
+  end
+
+  def lock!
+    update_attribute(:status, STATUS_LOCKED)
+  end
+
   def check_password?(clear_password)
     if auth_source_id.present?
       auth_source.authenticate(self.login, clear_password)
@@ -232,7 +260,19 @@ class User < Principal
     @notified_projects_ids = nil
     notified_projects_ids
   end
-  
+
+  # Find a user account by matching the exact login and then a case-insensitive
+  # version.  Exact matches will be given priority.
+  def self.find_by_login(login)
+    # force string comparison to be case sensitive on MySQL
+    type_cast = (ActiveRecord::Base.connection.adapter_name == 'MySQL') ? 'BINARY' : ''
+    
+    # First look for an exact match
+    user = first(:conditions => ["#{type_cast} login = ?", login])
+    # Fail over to case-insensitive if none was found
+    user ||= first(:conditions => ["#{type_cast} LOWER(login) = ?", login.to_s.downcase])
+  end
+
   def self.find_by_rss_key(key)
     token = Token.find_by_value(key)
     token && token.user.active? ? token.user : nil

@@ -1,4 +1,5 @@
 sk:
+  direction: ltr
   date:
     formats:
       # Use the strftime parameters for formats.
@@ -679,7 +680,7 @@ sk:
   text_reassign_time_entries: 'Preradiť evidované hodiny k tejto úlohe:'
   
   default_role_manager: Manažér
-  default_role_developper: Vývojár
+  default_role_developer: Vývojár
   default_role_reporter: Reportér
   default_tracker_bug: Chyba
   default_tracker_feature: Rozšírenie
@@ -708,7 +709,7 @@ sk:
   text_subprojects_destroy_warning: "Jeho podprojekt(y): {{value}} budú takisto vymazané."
   label_and_its_subprojects: "{{value}} a jeho podprojekty"
   mail_body_reminder: "{{count}} úloha(y), ktorá(é) je(sú) vám priradený(é), ma(jú) byť hotova(é) za {{days}} dní:"
-  mail_subject_reminder: "{{count}} úloha(y) ma(jú) byť hotova(é) za pár dní"
+  mail_subject_reminder: "{{count}} úloha(y) ma(jú) byť hotova(é) za pár {{days}} dní"
   text_user_wrote: "{{value}} napísal:"
   label_duplicated_by: duplikovaný
   setting_enabled_scm: Zapnúť SCM
@@ -901,3 +902,8 @@ sk:
   notice_failed_to_save_members: "Failed to save member(s): {{errors}}."
   text_zoom_out: Zoom out
   text_zoom_in: Zoom in
+  notice_unable_delete_time_entry: Unable to delete time log entry.
+  label_overall_spent_time: Overall spent time
+  field_time_entries: Log time
+  project_module_gantt: Gantt
+  project_module_calendar: Calendar

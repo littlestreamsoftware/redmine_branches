@@ -730,7 +730,7 @@ module Redmine
         show_weeks = @zoom > 1
         show_days = @zoom > 2
         
-        subject_width = 320
+        subject_width = 400
         header_heigth = 18
         # width of one day in pixels
         zoom = @zoom*2

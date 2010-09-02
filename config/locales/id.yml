@@ -2,6 +2,7 @@
 # by Raden Prabowo (cakbowo@gmail.com)
 
 id:
+  direction: ltr
   date:
     formats:
       default: "%d-%m-%Y"
@@ -177,7 +178,7 @@ id:
   mail_body_account_information: Informasi akun anda
   mail_subject_account_activation_request: "Permintaan aktivasi akun {{value}} "
   mail_body_account_activation_request: "Pengguna baru ({{value}}) sudan didaftarkan. Akun tersebut menunggu persetujuan anda:"
-  mail_subject_reminder: "{{count}} masalah harus selesai pada hari berikutnya"
+  mail_subject_reminder: "{{count}} masalah harus selesai pada hari berikutnya ({{days}})"
   mail_body_reminder: "{{count}} masalah yang ditugaskan pada anda harus selesai dalam {{days}} hari kedepan:"
   mail_subject_wiki_content_added: "'{{page}}' halaman wiki sudah ditambahkan"
   mail_body_wiki_content_added: "The '{{page}}' halaman wiki sudah ditambahkan oleh {{author}}."
@@ -838,7 +839,7 @@ id:
   text_wiki_page_reassign_children: "Tujukan halaman anak ke halaman induk yang ini"
   
   default_role_manager: Manager
-  default_role_developper: Pengembang
+  default_role_developer: Pengembang
   default_role_reporter: Pelapor
   default_tracker_bug: Bug
   default_tracker_feature: Fitur
@@ -914,3 +915,8 @@ id:
   notice_failed_to_save_members: "Failed to save member(s): {{errors}}."
   text_zoom_out: Zoom out
   text_zoom_in: Zoom in
+  notice_unable_delete_time_entry: Unable to delete time log entry.
+  label_overall_spent_time: Overall spent time
+  field_time_entries: Log time
+  project_module_gantt: Gantt
+  project_module_calendar: Calendar

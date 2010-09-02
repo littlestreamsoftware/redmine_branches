@@ -56,7 +56,10 @@ module ProjectsHelper
     s = ''
     if projects.any?
       ancestors = []
+      original_project = @project
       projects.each do |project|
+        # set the project environment to please macros.
+        @project = project
         if (ancestors.empty? || project.is_descendant_of?(ancestors.last))
           s << "<ul class='projects #{ ancestors.empty? ? 'root' : nil}'>\n"
         else
@@ -69,12 +72,13 @@ module ProjectsHelper
         end
         classes = (ancestors.empty? ? 'root' : 'child')
         s << "<li class='#{classes}'><div class='#{classes}'>" +
-               link_to(h(project), {:controller => 'projects', :action => 'show', :id => project}, :class => "project #{User.current.member_of?(project) ? 'my-project' : nil}")
+               link_to_project(project, {}, :class => "project #{User.current.member_of?(project) ? 'my-project' : nil}")
         s << "<div class='wiki description'>#{textilizable(project.short_description, :project => project)}</div>" unless project.description.blank?
         s << "</div>\n"
         ancestors << project
       end
       s << ("</li></ul>\n" * ancestors.size)
+      @project = original_project
     end
     s
   end

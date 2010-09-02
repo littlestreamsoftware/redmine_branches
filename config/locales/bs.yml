@@ -1,6 +1,7 @@
 #Ernad Husremovic hernad@bring.out.ba
 
 bs:
+  direction: ltr
   date:
     formats:
       default: "%d.%m.%Y"
@@ -184,7 +185,7 @@ bs:
   mail_body_account_information: Informacija o vašem korisničkom računu
   mail_subject_account_activation_request: "{{value}} zahtjev za aktivaciju korisničkog računa"
   mail_body_account_activation_request: "Novi korisnik ({{value}}) se registrovao. Korisnički račun čeka vaše odobrenje za aktivaciju:"
-  mail_subject_reminder: "{{count}} aktivnost(i) u kašnjenju u narednim danima"
+  mail_subject_reminder: "{{count}} aktivnost(i) u kašnjenju u narednim {{days}} danima"
   mail_body_reminder: "{{count}} aktivnost(i) koje su dodjeljenje vama u narednim {{days}} danima:"
   
   gui_validation_error: 1 greška
@@ -788,7 +789,7 @@ bs:
   text_custom_field_possible_values_info: 'Jedna linija za svaku vrijednost'
   
   default_role_manager: Menadžer
-  default_role_developper: Programer
+  default_role_developer: Programer
   default_role_reporter: Reporter
   default_tracker_bug: Greška
   default_tracker_feature: Nova funkcija
@@ -920,3 +921,8 @@ bs:
   notice_failed_to_save_members: "Failed to save member(s): {{errors}}."
   text_zoom_out: Zoom out
   text_zoom_in: Zoom in
+  notice_unable_delete_time_entry: Unable to delete time log entry.
+  label_overall_spent_time: Overall spent time
+  field_time_entries: Log time
+  project_module_gantt: Gantt
+  project_module_calendar: Calendar
