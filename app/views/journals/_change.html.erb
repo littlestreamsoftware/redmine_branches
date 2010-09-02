@@ -12,6 +12,6 @@
     <% end %>
     </ul>
     <% end %>
-    <%= render_notes(issue, journal, :reply_links => reply_links, :indice => journal.indice) unless journal.notes.blank? %>
+    <%= render_notes(journal.issue, journal, :reply_links => reply_links, :indice => journal.indice) unless journal.notes.blank? %>
   </div>
   <%= call_hook(:view_issues_history_journal_bottom, { :journal => journal }) %>
