@@ -123,7 +123,7 @@ class VersionTest < ActiveSupport::TestCase
       assert_equal false, @version.behind_schedule?
     end
 
-    should "be false if all of the issues are ahead of schedule xxx" do
+    should "be false if all of the issues are ahead of schedule" do
       @version.update_attribute(:effective_date, 7.days.from_now.to_date)
       @version.fixed_issues = [
                                Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60), # 14 day span, 60% done, 50% time left
@@ -155,48 +155,6 @@ class VersionTest < ActiveSupport::TestCase
     end
   end
 
-  context "#behind_schedule?" do
-    setup do
-      ProjectCustomField.destroy_all # Custom values are a mess to isolate in tests
-      Issue.destroy_all
-      @project = Project.generate!(:identifier => 'test0')
-      @project.trackers << Tracker.generate!
-    end
-
-    should "return false if the version is complete" do
-      assert Version.generate!
-    end
-
-    context "incomplete version" do
-      setup do
-        @version = Version.generate!(:project => @project)
-        @issue = Issue.generate_for_project!(@project, :start_date => 7.days.ago, :done_ratio => 60, :fixed_version => @version)
-        @version.reload
-        assert_equal 1, @version.fixed_issues.length
-      end
-
-      should "be false if there is no due_date" do
-        @version.update_attribute(:effective_date, nil)
-        assert_equal false, @version.behind_schedule?
-      end
-
-      should "be false if the due_date is after today" do
-        @version.update_attribute(:effective_date, 7.days.from_now.to_date)
-        assert_equal false, @version.behind_schedule?
-      end
-
-      should "be true if the due_date is today" do
-        @version.update_attribute(:effective_date, Date.today)
-        assert_equal true, @version.behind_schedule?
-      end
-
-      should "be true if the due_date is before today" do
-        @version.update_attribute(:effective_date, 3.days.ago.to_date)
-        assert_equal true, @version.behind_schedule?
-      end
-    end
-  end
-  
   context "#estimated_hours" do
     setup do
       @version = Version.create!(:project_id => 1, :name => '#estimated_hours')

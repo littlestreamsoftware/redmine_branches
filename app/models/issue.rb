@@ -63,10 +63,28 @@ class Issue < ActiveRecord::Base
   
   named_scope :open, :conditions => ["#{IssueStatus.table_name}.is_closed = ?", false], :include => :status
 
-  named_scope :recently_updated, :order => "#{self.table_name}.updated_on DESC"
+  named_scope :recently_updated, :order => "#{Issue.table_name}.updated_on DESC"
   named_scope :with_limit, lambda { |limit| { :limit => limit} }
   named_scope :on_active_project, :include => [:status, :project, :tracker],
                                   :conditions => ["#{Project.table_name}.status=#{Project::STATUS_ACTIVE}"]
+  named_scope :for_gantt, lambda {
+    {
+      :include => [:tracker, :status, :assigned_to, :priority, :project, :fixed_version],
+      :order => "#{Issue.table_name}.due_date ASC, #{Issue.table_name}.start_date ASC, #{Issue.table_name}.id ASC"
+    }
+  }
+
+  named_scope :without_version, lambda {
+    {
+      :conditions => { :fixed_version_id => nil}
+    }
+  }
+
+  named_scope :with_query, lambda {|query|
+    {
+      :conditions => Query.merge_conditions(query.statement)
+    }
+  }
 
   named_scope :for_gantt, lambda {
     {

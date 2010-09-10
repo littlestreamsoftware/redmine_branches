@@ -69,6 +69,14 @@ class Journal < ActiveRecord::Base
     journalized.respond_to?(:attachments) ? journalized.attachments : nil
   end
 
+  # Returns a string of css classes
+  def css_classes
+    s = 'journal'
+    s << ' has-notes' unless notes.blank?
+    s << ' has-details' unless details.blank?
+    s
+  end
+  
   def user_login
     user.present? ? user.login : nil
   end

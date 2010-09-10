@@ -87,20 +87,64 @@ class ProjectsControllerTest < ActionController::TestCase
     end 
   end
   
-  context "#add" do
+  context "#new" do
     context "by admin user" do
       setup do
         @request.session[:user_id] = 1
       end
       
       should "accept get" do
-        get :add
+        get :new
         assert_response :success
-        assert_template 'add'
+        assert_template 'new'
+      end
+
+    end
+
+    context "by non-admin user with add_project permission" do
+      setup do
+        Role.non_member.add_permission! :add_project
+        @request.session[:user_id] = 9
+      end
+
+      should "accept get" do
+        get :new
+        assert_response :success
+        assert_template 'new'
+        assert_no_tag :select, :attributes => {:name => 'project[parent_id]'}
+      end
+    end
+
+    context "by non-admin user with add_subprojects permission" do
+      setup do
+        Role.find(1).remove_permission! :add_project
+        Role.find(1).add_permission! :add_subprojects
+        @request.session[:user_id] = 2
       end
       
-      should "accept post" do
-        post :add, :project => { :name => "blog", 
+      should "accept get" do
+        get :new, :parent_id => 'ecookbook'
+        assert_response :success
+        assert_template 'new'
+        # parent project selected
+        assert_tag :select, :attributes => {:name => 'project[parent_id]'},
+                            :child => {:tag => 'option', :attributes => {:value => '1', :selected => 'selected'}}
+        # no empty value
+        assert_no_tag :select, :attributes => {:name => 'project[parent_id]'},
+                               :child => {:tag => 'option', :attributes => {:value => ''}}
+      end
+    end
+    
+  end
+
+  context "POST :create" do
+    context "by admin user" do
+      setup do
+        @request.session[:user_id] = 1
+      end
+      
+      should "create a new project" do
+        post :create, :project => { :name => "blog", 
                                  :description => "weblog",
                                  :identifier => "blog",
                                  :is_public => 1,
@@ -115,8 +159,8 @@ class ProjectsControllerTest < ActionController::TestCase
         assert_nil project.parent
       end
       
-      should "accept post with parent" do
-        post :add, :project => { :name => "blog", 
+      should "create a new subproject" do
+        post :create, :project => { :name => "blog", 
                                  :description => "weblog",
                                  :identifier => "blog",
                                  :is_public => 1,
@@ -137,15 +181,8 @@ class ProjectsControllerTest < ActionController::TestCase
         @request.session[:user_id] = 9
       end
       
-      should "accept get" do
-        get :add
-        assert_response :success
-        assert_template 'add'
-        assert_no_tag :select, :attributes => {:name => 'project[parent_id]'}
-      end
-      
-      should "accept post" do
-        post :add, :project => { :name => "blog", 
+      should "accept create a Project" do
+        post :create, :project => { :name => "blog", 
                                  :description => "weblog",
                                  :identifier => "blog",
                                  :is_public => 1,
@@ -166,7 +203,7 @@ class ProjectsControllerTest < ActionController::TestCase
       
       should "fail with parent_id" do
         assert_no_difference 'Project.count' do
-          post :add, :project => { :name => "blog", 
+          post :create, :project => { :name => "blog", 
                                    :description => "weblog",
                                    :identifier => "blog",
                                    :is_public => 1,
@@ -188,20 +225,8 @@ class ProjectsControllerTest < ActionController::TestCase
         @request.session[:user_id] = 2
       end
       
-      should "accept get" do
-        get :add, :parent_id => 'ecookbook'
-        assert_response :success
-        assert_template 'add'
-        # parent project selected
-        assert_tag :select, :attributes => {:name => 'project[parent_id]'},
-                            :child => {:tag => 'option', :attributes => {:value => '1', :selected => 'selected'}}
-        # no empty value
-        assert_no_tag :select, :attributes => {:name => 'project[parent_id]'},
-                               :child => {:tag => 'option', :attributes => {:value => ''}}
-      end
-      
-      should "accept post with parent_id" do
-        post :add, :project => { :name => "blog", 
+      should "create a project with a parent_id" do
+        post :create, :project => { :name => "blog", 
                                  :description => "weblog",
                                  :identifier => "blog",
                                  :is_public => 1,
@@ -214,7 +239,7 @@ class ProjectsControllerTest < ActionController::TestCase
       
       should "fail without parent_id" do
         assert_no_difference 'Project.count' do
-          post :add, :project => { :name => "blog", 
+          post :create, :project => { :name => "blog", 
                                    :description => "weblog",
                                    :identifier => "blog",
                                    :is_public => 1,
@@ -230,7 +255,7 @@ class ProjectsControllerTest < ActionController::TestCase
       should "fail with unauthorized parent_id" do
         assert !User.find(2).member_of?(Project.find(6))
         assert_no_difference 'Project.count' do
-          post :add, :project => { :name => "blog", 
+          post :create, :project => { :name => "blog", 
                                    :description => "weblog",
                                    :identifier => "blog",
                                    :is_public => 1,
@@ -293,9 +318,9 @@ class ProjectsControllerTest < ActionController::TestCase
     assert_template 'settings'
   end
   
-  def test_edit
+  def test_update
     @request.session[:user_id] = 2 # manager
-    post :edit, :id => 1, :project => {:name => 'Test changed name',
+    post :update, :id => 1, :project => {:name => 'Test changed name',
                                        :issue_custom_field_ids => ['']}
     assert_redirected_to 'projects/ecookbook/settings'
     project = Project.find(1)
@@ -381,52 +406,6 @@ class ProjectsControllerTest < ActionController::TestCase
     assert_template 'show'
   end
 
-  def test_reset_activities
-    @request.session[:user_id] = 2 # manager
-    project_activity = TimeEntryActivity.new({
-                                               :name => 'Project Specific',
-                                               :parent => TimeEntryActivity.find(:first),
-                                               :project => Project.find(1),
-                                               :active => true
-                                             })
-    assert project_activity.save
-    project_activity_two = TimeEntryActivity.new({
-                                                   :name => 'Project Specific Two',
-                                                   :parent => TimeEntryActivity.find(:last),
-                                                   :project => Project.find(1),
-                                                   :active => true
-                                                 })
-    assert project_activity_two.save
-
-    delete :reset_activities, :id => 1
-    assert_response :redirect
-    assert_redirected_to 'projects/ecookbook/settings/activities'
-
-    assert_nil TimeEntryActivity.find_by_id(project_activity.id)
-    assert_nil TimeEntryActivity.find_by_id(project_activity_two.id)
-  end
-  
-  def test_reset_activities_should_reassign_time_entries_back_to_the_system_activity
-    @request.session[:user_id] = 2 # manager
-    project_activity = TimeEntryActivity.new({
-                                               :name => 'Project Specific Design',
-                                               :parent => TimeEntryActivity.find(9),
-                                               :project => Project.find(1),
-                                               :active => true
-                                             })
-    assert project_activity.save
-    assert TimeEntry.update_all("activity_id = '#{project_activity.id}'", ["project_id = ? AND activity_id = ?", 1, 9])
-    assert 3, TimeEntry.find_all_by_activity_id_and_project_id(project_activity.id, 1).size
-    
-    delete :reset_activities, :id => 1
-    assert_response :redirect
-    assert_redirected_to 'projects/ecookbook/settings/activities'
-
-    assert_nil TimeEntryActivity.find_by_id(project_activity.id)
-    assert_equal 0, TimeEntry.find_all_by_activity_id_and_project_id(project_activity.id, 1).size, "TimeEntries still assigned to project specific activity"
-    assert_equal 3, TimeEntry.find_all_by_activity_id_and_project_id(9, 1).size, "TimeEntries still assigned to project specific activity"
-  end
-  
   # A hook that is manually registered later
   class ProjectBasedTemplate < Redmine::Hook::ViewListener
     def view_layouts_base_html_head(context)
