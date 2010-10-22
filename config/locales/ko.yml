@@ -969,3 +969,13 @@ ko:
   field_time_entries: Log time
   project_module_gantt: Gantt
   project_module_calendar: Calendar
+  label_user_mail_option_only_owner_or_creator: Only for things I am the owner or creator of
+  field_custom_ldap_filter: Custom LDAP filter
+  label_user_mail_option_only_owner: Only for things I am the owner of
+  field_member_of_group: Assignee's group
+  setting_default_notification_option: Default notification option
+  label_user_mail_option_only_my_events: Only for things I watch or I'm involved in
+  label_user_mail_option_only_assigned: Only for things I am assigned to
+  label_in_date_range: within period
+  field_assigned_to_role: Assignee's role
+  label_entered_by: (originally entered by {{who}}).
