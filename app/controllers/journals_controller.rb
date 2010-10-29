@@ -26,6 +26,7 @@ class JournalsController < ApplicationController
   include QueriesHelper
   helper :sort
   include SortHelper
+  helper :custom_fields
 
   def index
     retrieve_query
