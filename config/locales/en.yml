@@ -782,6 +782,7 @@ en:
   label_api_access_key_created_on: "API access key created {{value}} ago"
   label_profile: Profile
   label_subtask_plural: Subtasks
+  label_user_search: "Search for user:"
   label_project_copy_notifications: Send email notifications during the project copy
   label_entered_by: "(originally entered by {{who}})."
   
